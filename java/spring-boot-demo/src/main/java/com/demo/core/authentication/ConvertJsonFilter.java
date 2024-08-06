@@ -26,6 +26,7 @@ public class ConvertJsonFilter extends AbstractAuthenticationProcessingFilter {
 
     /**
      * 配置登录url
+     *
      * @param path
      * @param method
      */
@@ -67,6 +68,7 @@ public class ConvertJsonFilter extends AbstractAuthenticationProcessingFilter {
     /**
      * 获取user
      * 方便重写
+     *
      * @param request
      * @return
      * @throws IOException

@@ -1,10 +1,6 @@
 package com.demo.core.dto;
 
 
-
-
-
-
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
 

@@ -90,10 +90,16 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
         String querySql = sql;
         if (criteria != null && !criteria.isEmpty()) {
             StringBuilder sqlStr = new StringBuilder(sql);
+            boolean where = false;
             for (int i = 0, l = criteria.size(); i < l; i++) {
-                if (i == 0) sqlStr.append(" where ");
-                sqlStr.append(criteria.get(i).whereSql());
-                if (i != l - 1) sqlStr.append(" and ");
+                if (!where) {
+                    sqlStr.append(" where ");
+                    where = true;
+                }
+                if (criteria.get(i).getParameter() != null) {
+                    sqlStr.append(criteria.get(i).whereSql());
+                    if (i != l - 1) sqlStr.append(" and ");
+                }
             }
             querySql = sqlStr.toString();
         }
@@ -103,8 +109,10 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
         Query listQuery = entityManager.createNativeQuery(querySql.toString());
         if (criteria != null && !criteria.isEmpty()) {
             for (int i = 0, l = criteria.size(); i < l; i++) {
-                countQuery.setParameter(i + 1, criteria.get(i).getParameter());
-                listQuery.setParameter(i + 1, criteria.get(i).getParameter());
+                if (criteria.get(i).getParameter() != null) {
+                    countQuery.setParameter(i + 1, criteria.get(i).getParameter());
+                    listQuery.setParameter(i + 1, criteria.get(i).getParameter());
+                }
             }
         }
         listQuery.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
@@ -139,13 +147,13 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
 
     @Override
     public List<T> findNotDeleted() {
-        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE deleted = 0");
+        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE deleted != 1");
         return entityManager.createNativeQuery(sb.toString(), clazz).getResultList();
     }
 
     @Override
     public List<T> findNotDeletedAndStatus() {
-        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE status = 1 and deleted = 0");
+        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE status != 0 and deleted != 1");
         return entityManager.createNativeQuery(sb.toString(), clazz).getResultList();
     }
 

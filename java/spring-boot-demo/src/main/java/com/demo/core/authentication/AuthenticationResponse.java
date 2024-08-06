@@ -4,6 +4,7 @@ import lombok.Getter;
 
 /**
  * 验证返回格式实体
+ *
  * @param <T>
  */
 @Getter

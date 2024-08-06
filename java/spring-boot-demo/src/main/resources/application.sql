@@ -3,15 +3,16 @@ CREATE TABLE `sys_user`
 (
     `id`          int(11)     NOT NULL AUTO_INCREMENT COMMENT '用户ID',
     `real_name`   varchar(20) NOT NULL COMMENT '真实名称',
-    `username`    varchar(50) NOT NULL COMMENT '用户名',
+    `username`    varchar(50) NOT NULL COMMENT '账户名',
+    `user_avatar`    varchar(50) NOT NULL COMMENT '头像',
     `status`      smallint(1) DEFAULT 1 COMMENT '状态 0禁用1启用',
-    `password`    varchar(50) NOT NULL COMMENT '密码',
+    `password`    varchar(200) NOT NULL COMMENT '密码',
     `email`       varchar(50) DEFAULT NULL COMMENT '电子邮件地址',
     `phone`       varchar(20) DEFAULT NULL COMMENT '电话号码',
     `create_time` datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`   int(11)     NOT NULL COMMENT '创建人',
     `update_time` datetime    DEFAULT NULL COMMENT '更新时间',
-    `update_by`   int(11)     NOT NULL COMMENT '修改人',
+    `update_by`   int(11)   COMMENT '修改人',
     `deleted`     smallint(1) DEFAULT 0 COMMENT '删除状态',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -23,13 +24,13 @@ CREATE TABLE `sys_role`
     `id`              int(11)     NOT NULL AUTO_INCREMENT COMMENT '角色ID',
     `role_name`       varchar(20) NOT NULL COMMENT '角色名称',
     `status`          smallint(1) DEFAULT 1 COMMENT '状态 0禁用1启用',
-    `role_code`       varchar(20) DEFAULT NULL COMMENT '角色编码',
+    `role_key`       varchar(20) DEFAULT NULL COMMENT '角色编码',
     `description`     varchar(50) DEFAULT NULL COMMENT '角色描述',
     `create_time`     datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`       int(11)     NOT NULL COMMENT '创建人',
     `role_type`       smallint(1) DEFAULT 1 COMMENT '角色类型：1内部员工，2外部客户',
     `update_time`     datetime    DEFAULT NULL COMMENT '更新时间',
-    `update_by`   int(11)     NOT NULL COMMENT '修改人',
+    `update_by`   int(11)   COMMENT '修改人',
     `deleted`         smallint(1) DEFAULT 0 COMMENT '删除状态',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -47,7 +48,7 @@ CREATE TABLE `sys_permission`
     `create_time`     datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`       int(11)     NOT NULL COMMENT '创建人',
     `update_time`     datetime    DEFAULT NULL COMMENT '更新时间',
-    `update_by`   int(11)     NOT NULL COMMENT '修改人',
+    `update_by`   int(11)   COMMENT '修改人',
     `deleted`         smallint(1) DEFAULT 0 COMMENT '删除状态',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -98,7 +99,7 @@ CREATE TABLE `sys_department`
     `create_time`     datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`       int(11)               NOT NULL COMMENT '创建人',
     `update_time`     datetime    DEFAULT NULL COMMENT '更新时间',
-    `update_by`   int(11)     NOT NULL COMMENT '修改人',
+    `update_by`   int(11)   COMMENT '修改人',
     `deleted`         smallint(1) DEFAULT 0 COMMENT '删除状态',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -115,7 +116,7 @@ CREATE TABLE `sys_job`
     `create_time`     datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`       int(11)     NOT NULL COMMENT '创建人',
     `update_time`     datetime    DEFAULT NULL COMMENT '更新时间',
-    `update_by`   int(11)     NOT NULL COMMENT '修改人',
+    `update_by`   int(11)   COMMENT '修改人',
     `deleted`         smallint(1) DEFAULT 0 COMMENT '删除状态',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -146,7 +147,7 @@ CREATE TABLE `sys_menu`
     `create_time` datetime     DEFAULT NULL COMMENT '创建时间',
     `create_by`   int(11)     NOT NULL COMMENT '创建人',
     `update_time` datetime     DEFAULT NULL COMMENT '更新时间',
-    `update_by`   int(11)     NOT NULL COMMENT '修改人',
+    `update_by`   int(11)   COMMENT '修改人',
     `deleted`     smallint(1)  DEFAULT 0 COMMENT '删除状态',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
