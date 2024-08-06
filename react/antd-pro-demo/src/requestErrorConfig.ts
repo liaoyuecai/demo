@@ -82,7 +82,7 @@ export const errorConfig: RequestConfig = {
       const { data } = response as unknown as ResponseStructure;
 
       if (data?.code !== 0) {
-        
+        message.error(data.errorMsg)
       }
       return response;
     },

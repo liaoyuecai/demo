@@ -1,27 +1,38 @@
 package com.demo.sys.service;
 
+import com.demo.core.exception.ErrorCode;
+import com.demo.core.exception.GlobalException;
 import com.demo.core.service.impl.DefaultCURDService;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dao.SysMenuRepository;
 import com.demo.sys.datasource.dao.SysRoleRepository;
+import com.demo.sys.datasource.dao.SysUserRepository;
+import com.demo.sys.datasource.dto.ResetPassword;
 import com.demo.sys.datasource.dto.WebMenu;
 import com.demo.sys.datasource.entity.SysMenu;
 import com.demo.sys.datasource.entity.SysRole;
 import com.demo.sys.datasource.entity.SysUser;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service("userService")
 public class UserService extends DefaultCURDService<SysUser> {
+
     @Resource
     private SysMenuRepository menuRepository;
     @Resource
     private SysRoleRepository roleRepository;
+    @Resource
+    private PasswordEncoder passwordEncoder;
+
+    public UserService(@Autowired SysUserRepository repository) {
+        super(repository);
+    }
 
     /**
      * 完善当前用户缓存信息
@@ -64,4 +75,18 @@ public class UserService extends DefaultCURDService<SysUser> {
         return rootNodes;
     }
 
+    public void resetPassword(ResetPassword data, AuthUserCache userDetails) {
+        Optional<SysUser> optional = repository.findById(userDetails.getId());
+        if (!optional.isPresent()) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR_DATA_NOT_FOUND);
+        }
+        SysUser user = optional.get();
+        if (!passwordEncoder.matches(data.getOldPassword(), user.getPassword())) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR_OLD_PWD);
+        }
+        user.setPassword(passwordEncoder.encode(data.getNewPassword()));
+        user.setUpdateBy(user.getId());
+        user.setUpdateTime(LocalDateTime.now());
+        repository.save(user);
+    }
 }

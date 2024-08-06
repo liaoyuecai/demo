@@ -20,6 +20,8 @@ public enum ErrorCode {
 
     DATASOURCE_CONNECT_ERROR(-1000, "数据库连接异常"),
     PARAMS_ERROR(4001, "参数异常"),
+    PARAMS_ERROR_DATA_NOT_FOUND(400101, "当前参数查询不到数据"),
+    PARAMS_ERROR_OLD_PWD(400102, "旧密码错误"),
     CODE_ERROR(4002, "代码异常"),
     DATA_ERROR(4003, "数据异常"),
 

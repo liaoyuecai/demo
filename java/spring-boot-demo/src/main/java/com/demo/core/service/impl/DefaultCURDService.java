@@ -6,6 +6,7 @@ import com.demo.core.service.CURDService;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +18,11 @@ import java.util.List;
  */
 public abstract class DefaultCURDService<T> implements CURDService<T> {
 
-    private CustomerBaseRepository<T> repository;
+    protected CustomerBaseRepository<T> repository;
+
+    public DefaultCURDService(CustomerBaseRepository<T> repository) {
+        this.repository = repository;
+    }
 
     @Override
     public T insert(T entity) {

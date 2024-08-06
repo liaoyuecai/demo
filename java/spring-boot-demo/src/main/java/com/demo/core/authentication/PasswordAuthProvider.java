@@ -51,4 +51,5 @@ public class PasswordAuthProvider implements AuthenticationProvider {
     public boolean supports(Class<?> authentication) {
         return UserAuthenticationToken.class.isAssignableFrom(authentication);
     }
+
 }
