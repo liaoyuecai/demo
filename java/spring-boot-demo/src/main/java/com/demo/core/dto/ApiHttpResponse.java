@@ -3,6 +3,7 @@ package com.demo.core.dto;
 
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
+import com.demo.core.utils.JsonUtils;
 
 import java.io.Serializable;
 
@@ -105,5 +106,8 @@ public class ApiHttpResponse<T> implements Serializable {
     public final static ApiHttpResponse success(Object result) {
         return new ApiHttpResponse(result);
     }
-
+    @Override
+    public String toString() {
+        return JsonUtils.toJsonStr(this);
+    }
 }

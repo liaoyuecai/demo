@@ -1,6 +1,7 @@
 package com.demo.core.service.impl;
 
 import com.demo.core.config.jpa.CustomerBaseRepository;
+import com.demo.core.dto.PageList;
 import com.demo.core.dto.PageListRequest;
 import jakarta.annotation.Resource;
 import org.springframework.context.ApplicationContext;
@@ -52,14 +53,16 @@ public class CommonCURDService {
         return context.getBean(repositoryClass).findAll(example, pageable);
     }
 
-
-    public <T, R extends CustomerBaseRepository<T>> Page findPageExample(PageListRequest pageListRequest, Class<R> repositoryClass) {
-        return this.findPage(pageListRequest.toExample(), pageListRequest.toPageable(), repositoryClass);
+    public <T, R extends CustomerBaseRepository<T>> PageList<T> findPage(PageListRequest<T> pageListRequest, Class<R> repositoryClass) {
+        if (pageListRequest.toExample() != null)
+            return pageListRequest.toPageList(context.getBean(repositoryClass).findAll(pageListRequest.toExample(), pageListRequest.toPageable()));
+        else
+            return pageListRequest.toPageList(context.getBean(repositoryClass).findAll(pageListRequest.toPageable()));
     }
 
 
-    public <R extends CustomerBaseRepository> Page findPageCriteria(PageListRequest pageListRequest, Class<R> repositoryClass) {
-        return context.getBean(repositoryClass).customQueryCriteriaPage(pageListRequest.toQuerySql(), pageListRequest.toCriteria(), pageListRequest.toPageable());
+    public <R extends CustomerBaseRepository> PageList findPageCriteria(PageListRequest pageListRequest, Class<R> repositoryClass) {
+        return pageListRequest.toPageList(context.getBean(repositoryClass).customQueryCriteriaPage(pageListRequest.toQuerySql(), pageListRequest.toCriteria(), pageListRequest.toPageable()));
     }
 
 

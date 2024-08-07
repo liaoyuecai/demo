@@ -40,7 +40,7 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
     @Override
     public int deleteUpdateByIds(Collection<Integer> ids) {
         StringBuilder sb = new StringBuilder("update ")
-                .append(getTableName()).append("set deleted = 1 where id in(?)");
+                .append(getTableName()).append(" set deleted = 1 where id in(?)");
         Query query = entityManager.createNativeQuery(sb.toString());
         query.setParameter(1, ids);
         return query.executeUpdate();

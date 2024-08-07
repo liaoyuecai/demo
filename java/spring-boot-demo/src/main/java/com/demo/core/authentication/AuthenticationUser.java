@@ -17,8 +17,9 @@ import java.util.List;
 @Setter
 @Getter
 public class AuthenticationUser implements UserDetails {
-    private String username;
-    private String password;
+    protected Integer id;
+    protected String username;
+    protected String password;
 
     private String token;
 

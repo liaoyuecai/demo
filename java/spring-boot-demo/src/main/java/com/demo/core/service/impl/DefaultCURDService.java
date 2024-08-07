@@ -1,12 +1,14 @@
 package com.demo.core.service.impl;
 
 import com.demo.core.config.jpa.CustomerBaseRepository;
+import com.demo.core.dto.PageList;
 import com.demo.core.dto.PageListRequest;
+import com.demo.core.exception.ErrorCode;
+import com.demo.core.exception.GlobalException;
 import com.demo.core.service.CURDService;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +53,7 @@ public abstract class DefaultCURDService<T> implements CURDService<T> {
 
     @Override
     public void deleteUpdate(Collection<Integer> ids) {
+        if (ids == null || ids.isEmpty()) throw new GlobalException(ErrorCode.PARAMS_ERROR_REQUEST_DATA_NOT_FOUND);
         repository.deleteUpdateByIds(ids);
     }
 
@@ -65,12 +68,15 @@ public abstract class DefaultCURDService<T> implements CURDService<T> {
     }
 
     @Override
-    public Page<T> findPageExample(PageListRequest<T> pageListRequest) {
-        return repository.findAll(pageListRequest.toExample(), pageListRequest.toPageable());
+    public PageList<T> findPage(PageListRequest<T> pageListRequest) {
+        if (pageListRequest.toExample() != null)
+            return pageListRequest.toPageList(repository.findAll(pageListRequest.toExample(), pageListRequest.toPageable()));
+        else
+            return pageListRequest.toPageList(repository.findAll(pageListRequest.toPageable()));
     }
 
     @Override
-    public Page<T> findPageCriteria(PageListRequest pageListRequest) {
-        return repository.customQueryCriteriaPage(pageListRequest.toQuerySql(), pageListRequest.toCriteria(), pageListRequest.toPageable());
+    public PageList<T> findPageCriteria(PageListRequest pageListRequest) {
+        return pageListRequest.toPageList(repository.customQueryCriteriaPage(pageListRequest.toQuerySql(), pageListRequest.toCriteria(), pageListRequest.toPageable()));
     }
 }

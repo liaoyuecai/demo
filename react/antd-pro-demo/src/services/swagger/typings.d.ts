@@ -109,4 +109,11 @@ declare namespace API {
     /** User Status */
     userStatus?: number;
   };
+
+  type EditForm<T> = {
+    record?: T;
+    visible: boolean;
+    onOk?: (val) => Promise<boolean>;
+    onCancel?: () => void;
+  }
 }

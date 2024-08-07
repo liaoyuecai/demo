@@ -22,7 +22,10 @@ public enum ErrorCode {
     PARAMS_ERROR(4001, "参数异常"),
     PARAMS_ERROR_DATA_NOT_FOUND(400101, "当前参数查询不到数据"),
     PARAMS_ERROR_OLD_PWD(400102, "旧密码错误"),
+    PARAMS_ERROR_REQUEST_DATA_NOT_FOUND(400103, "请求参数为空"),
     CODE_ERROR(4002, "代码异常"),
+    CODE_ERROR_PARAMS_NOT_FOUND(400201, "找不到对应的参数"),
+    CODE_ERROR_PARAMS_TYPE_ERROR(400202, "参数类型异常"),
     DATA_ERROR(4003, "数据异常"),
 
     OPERATE_OUT_RANGE_ERROR(5001, "操作越权"),

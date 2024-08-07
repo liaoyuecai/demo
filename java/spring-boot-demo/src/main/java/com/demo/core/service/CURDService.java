@@ -1,5 +1,6 @@
 package com.demo.core.service;
 
+import com.demo.core.dto.PageList;
 import com.demo.core.dto.PageListRequest;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ public interface CURDService<T> {
 
     Page<T> findPage(Example<T> example, Pageable pageable);
 
-    Page<T> findPageExample(PageListRequest<T> pageListRequest);
+    PageList<T> findPage(PageListRequest<T> pageListRequest);
 
-    Page<T> findPageCriteria(PageListRequest pageListRequest);
+    PageList<T> findPageCriteria(PageListRequest pageListRequest);
 }

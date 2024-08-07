@@ -15,7 +15,6 @@ import java.util.List;
 @Getter
 @Setter
 public class AuthUserCache extends AuthenticationUser {
-    private Integer id;
     //识别是否root账户
     private boolean isRoot = false;
     private String avatar;

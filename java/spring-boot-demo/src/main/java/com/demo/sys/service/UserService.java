@@ -5,7 +5,6 @@ import com.demo.core.exception.GlobalException;
 import com.demo.core.service.impl.DefaultCURDService;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dao.SysMenuRepository;
-import com.demo.sys.datasource.dao.SysRoleRepository;
 import com.demo.sys.datasource.dao.SysUserRepository;
 import com.demo.sys.datasource.dto.ResetPassword;
 import com.demo.sys.datasource.dto.WebMenu;
@@ -25,8 +24,6 @@ public class UserService extends DefaultCURDService<SysUser> {
 
     @Resource
     private SysMenuRepository menuRepository;
-    @Resource
-    private SysRoleRepository roleRepository;
     @Resource
     private PasswordEncoder passwordEncoder;
 
