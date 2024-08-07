@@ -66,11 +66,15 @@ export async function getInitialState(): Promise<{
 const convertMeanItem = (menus: API.MenuData[]) => {
   const meunData: MenuDataItem[] = [];
   menus.forEach((item) => {
-    const iconStr: string = item.icon ? item.icon : 'AlignCenterOutlined'
-    const convertNode: MenuDataItem = {
+    const iconStr: string|undefined = item.icon
+    const convertNode: MenuDataItem = iconStr?{
       key: item.key,
       name: item.name,
-      icon: React.createElement(allIcons[iconStr]),
+      icon: <div style={{ marginRight: 5 }}>{React.createElement(allIcons[iconStr])}</div>,
+      path: item.path
+    }:{
+      key: item.key,
+      name: item.name,
       path: item.path
     }
     if (item.children && item.children.length > 0)
@@ -111,7 +115,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           <Row>{menuItemProps.pro_layout_parentKeys &&
             menuItemProps.pro_layout_parentKeys.length > 0 &&
             menuItemProps.icon}
-            <div style={{ marginLeft: 10 }}>{defaultDom}</div>
+            {defaultDom}
           </Row>
         </Link>
       );
