@@ -25,13 +25,7 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
         this.repository = repository;
     }
 
-
-    public T insert(T entity) {
-        return repository.save(entity);
-    }
-
-
-    public T update(T entity) {
+    public T save(T entity) {
         return repository.save(entity);
     }
 
@@ -62,6 +56,16 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
     }
 
 
+
+    public List<T> findNotDeletedAndStatus() {
+        return repository.findNotDeletedAndStatus();
+    }
+
+    public List<T> findNotDeleted() {
+        return repository.findNotDeleted();
+    }
+
+
     public Page<T> findPage(Example<T> example, Pageable pageable) {
         return repository.findAll(example, pageable);
     }
@@ -77,6 +81,7 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
     /**
      * 自定义查询
      * 参数来自PageListRequest.getCustomQuery
+     *
      * @param request
      * @return
      */
@@ -87,10 +92,11 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
     /**
      * 自定义查询
      * 参数来自PageListRequest.getCustomQuery
+     *
      * @param request
      * @param clazz
-     * @return
      * @param <K>
+     * @return
      */
     public <K> PageList<K> findPageCustom(PageListRequest<T> request, Class<K> clazz) {
         Page<K> page = repository.customQuery(request.getCustomQuery(), clazz, request.toPageable());
@@ -103,6 +109,7 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
     /**
      * 自定义查询
      * 参数来自PageListRequest.getCustomCriteriaQuery
+     *
      * @param request
      * @return
      */
@@ -114,10 +121,11 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
     /**
      * 自定义查询
      * 参数来自PageListRequest.getCustomCriteriaQuery
+     *
      * @param request
      * @param clazz
-     * @return
      * @param <K>
+     * @return
      */
     public <K> PageList<K> findPageCustomCriteria(PageListRequest<T> request, Class<K> clazz) {
         Page<K> page = repository.customQuery(request.getCustomCriteriaQuery(), clazz, request.toPageable());

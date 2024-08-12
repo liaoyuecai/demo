@@ -81,6 +81,16 @@ export default [
         path: '/sys/role',
         component: './sys/role',
       },
+      {
+        name: 'dept',
+        path: '/sys/dept',
+        component: './sys/dept',
+      },
+      {
+        name: 'job',
+        path: '/sys/job',
+        component: './sys/job',
+      },
     ]
   }
 ];

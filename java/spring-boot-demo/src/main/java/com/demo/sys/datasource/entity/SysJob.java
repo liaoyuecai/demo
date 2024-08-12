@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 @Table(name = "sys_job")
 public class SysJob extends TableBaseEntity {
-
+    private Integer parentId;
     private String jobName;
     private String description;
     private Integer deptId;

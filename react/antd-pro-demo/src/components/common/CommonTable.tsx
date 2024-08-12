@@ -76,7 +76,7 @@ const CommonTable: React.FC<CommonTableProps> = (prop) => {
                 setPageTotal(data.pageTotal);
             } else {
                 if (val && val.data) {
-                    setDataSource(val.data.data);
+                    setDataSource(val.data.list);
                     setPageTotal(val.data.total);
                 }
             }

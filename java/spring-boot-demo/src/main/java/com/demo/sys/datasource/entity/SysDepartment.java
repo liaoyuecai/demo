@@ -11,7 +11,6 @@ import lombok.Data;
 @Table(name = "sys_department")
 public class SysDepartment extends TableBaseEntity {
     private String departmentName;
-    private Integer departmentType;
     private String description;
     private Integer parentId;
 }

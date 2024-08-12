@@ -28,7 +28,7 @@ public class RoleController {
     @PostMapping("/save")
     @RequestSave
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysRole> request) {
-        service.insert(request.getData());
+        service.save(request.getData());
         return request.success();
     }
 

@@ -122,4 +122,11 @@ declare namespace API {
     menuIcon?: string;
     menuPath: string;
   };
+  type TreeNode<T> = {  
+    key: number;  
+    value: number;  
+    title: string;  
+    children?: TreeNode<T>[];  
+    // 其他可能的属性，使用泛型T来保持灵活性  
+  } & T;
 }

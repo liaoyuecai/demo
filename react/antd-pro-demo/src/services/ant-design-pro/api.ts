@@ -135,3 +135,43 @@ export function deepClone(obj: any) {
   }
   return objClone;
 }
+
+export function listToTree<T extends { id: number; parentId?: number;}>(  
+  list: T[],  
+  getTitleKey: (item: T) => string  
+): API.TreeNode<T>[]{  
+  const map: Record<number, API.TreeNode<T>> = {}; // 用于存储已转换的树节点  
+  const rootNodes: API.TreeNode<T>[] = []; // 存储根节点（没有parentId的节点）  
+  
+  // 第一步：遍历菜单列表，构建map  
+  list.forEach(item => {  
+    const treeNode: API.TreeNode<T> = {  
+      key: item.id,  
+      value: item.id,  
+      title: getTitleKey(item), // 使用getTitleKey来获取标题  
+      ...item,  
+    };  
+    map[item.id ?? 0] = treeNode;  
+  
+    if (!item.parentId) {  
+      // 如果没有parentId，则是根节点  
+      rootNodes.push(treeNode);  
+    }  
+  });  
+  
+  list.forEach(item => {  
+    const currentNode = map[item.id ?? 0];  
+    if (item.parentId !== undefined) {  
+      // 查找父节点并添加到其子节点数组中  
+      const parentNode = map[item.parentId];  
+      if (parentNode) {  
+        if (!parentNode.children)  
+          parentNode.children = [currentNode];  
+        else  
+          parentNode.children.push(currentNode);  
+      }  
+    }  
+  });  
+  
+  return rootNodes;  
+}; 

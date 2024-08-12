@@ -1,43 +1,32 @@
 import { post } from '@/services/ant-design-pro/api';
-import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import {
   PageContainer,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Form, Input, InputNumber, message, Popconfirm, Switch, TreeSelect } from 'antd';
+import { Button, Form, Input, message, Popconfirm, Switch, TreeSelect } from 'antd';
 import React, { useRef, useState } from 'react';
-import IconSelect from '@/components/utils/IconSelect';
 import FormSubmitModal from '@/components/common/FormSubmitModal';
-import CreateIcon from '@/components/common/CreateIcon';
-export type SysMenu = {
-  id?: number;
+export type SysDept = {
+  id: number;
   parentId?: number;
   status?: number;
-  menuSort?: number;
-  menuName?: string;
-  menuPath?: string;
-  menuIcon?: string;
+  departmentName: string;
+  description?: string;
 }
 
-type SysMenuTreeNode = {
-  id: number;
+type TreeNode = SysDept & {
   key?: number;
   value?: number;
-  status?: number;
   title?: string;//title = menuName
-  parentId?: number;
-  menuSort?: number;
-  menuName?: string;
-  menuPath?: string;
-  menuIcon?: string;
-  children?: SysMenuTreeNode[]
+  children?: TreeNode[]
 }
 
 
 
 
-const MenuPage: React.FC = () => {
+const Page: React.FC = () => {
   const [modalOpen, handleModalOpen] = useState<boolean>(false);
 
 
@@ -49,56 +38,39 @@ const MenuPage: React.FC = () => {
 
   const [form] = Form.useForm();
 
-  // 用于展示自定义图标组件
-  const [iconVisible, setIconVisible] = useState<boolean>(false)
-  // 当前展示图标
-  const [currentIcon, setCurrentIcon] = useState<string>('')
 
-  // 将子组件选择的icon进行存储
-  const setIcon = (icon: string) => {
-    form.setFieldValue('menuIcon', icon)
-    setCurrentIcon(icon)
-    setIconVisible(false)
-  }
 
 
 
   /**  
-  * 将扁平的菜单列表转换为树形结构  
-  * @param menus 扁平的菜单列表  
+  * 将扁平的列表转换为树形结构  
+  * @param list 扁平的列表  
   * @returns 转换后的树形结构  
   */
-  const listToTree = (menus: SysMenu[]): SysMenuTreeNode[] => {
-    const map: Record<number, SysMenuTreeNode> = {}; // 用于存储已转换的树节点  
-    const rootNodes: SysMenuTreeNode[] = []; // 存储根节点（没有parentId的节点）  
+  const listToTree = (list: SysDept[]): TreeNode[] => {
+    const map: Record<number, TreeNode> = {}; // 用于存储已转换的树节点  
+    const rootNodes: TreeNode[] = []; // 存储根节点（没有parentId的节点）  
 
     // 第一步：遍历菜单列表，构建map  
-    menus.forEach(menu => {
-      const treeNode: SysMenuTreeNode = {
-        id: menu.id ? menu.id : 0,
-        key: menu.id,
-        value: menu.id,
-        status: menu.status,
-        title: menu.menuName,
-        parentId: menu.parentId,
-        menuSort: menu.menuSort,
-        menuName: menu.menuName,
-        menuPath: menu.menuPath,
-        menuIcon: menu.menuIcon,
+    list.forEach(item => {
+      const treeNode: TreeNode = {
+        key: item.id,
+        value: item.id,
+        title: item.departmentName, ...item
       };
-      map[menu.id ? menu.id : 0] = treeNode;
+      map[item.id ? item.id : 0] = treeNode;
 
-      if (!menu.parentId) {
+      if (!item.parentId) {
         // 如果没有parentId，则是根节点  
         rootNodes.push(treeNode);
       }
     });
 
-    menus.forEach(menu => {
-      const currentNode = map[menu.id ? menu.id : 0];
-      if (menu.parentId !== undefined) {
+    list.forEach(item => {
+      const currentNode = map[item.id ? item.id : 0];
+      if (item.parentId !== undefined) {
         // 查找父节点并添加到其子节点数组中  
-        const parentNode = map[menu.parentId];
+        const parentNode = map[item.parentId];
         if (parentNode) {
           if (!parentNode.children)
             parentNode.children = [currentNode];
@@ -118,8 +90,8 @@ const MenuPage: React.FC = () => {
 
   const columns: ProColumns<any>[] = [
     {
-      title: '菜单名称',
-      dataIndex: 'menuName',
+      title: '部门名称',
+      dataIndex: 'departmentName',
       render: (value, record) => {
         return <a href='#' onClick={() => {
           form.setFieldsValue(record)
@@ -142,32 +114,17 @@ const MenuPage: React.FC = () => {
       },
     },
     {
-      title: '排序',
-      dataIndex: 'menuSort'
-    },
-    {
-      title: '图标',
-      dataIndex: 'menuIcon',
-      render(dom) {
-        if (!dom)
-          return '';
-        if (dom == '-' || dom == '')
-          return '';
-        return <CreateIcon name={dom.toString()} />;
-      },
-    },
-    {
-      title: '路由',
-      dataIndex: 'menuPath'
-    },
+      title: '描述',
+      dataIndex: 'description'
+    }
   ];
 
   return (
     <PageContainer>
-      <FormSubmitModal title="编辑菜单" open={modalOpen} onOk={() => { form.submit(); }}
+      <FormSubmitModal title="编辑部门" open={modalOpen} onOk={() => { form.submit(); }}
         onCancel={() => { handleModalOpen(false); }}>
         <Form form={form} onFinish={(val: any) => {
-          const res = post('/menu/save', { data: val });
+          const res = post('/dept/save', { data: val });
           res.then((re) => {
             if (re.code === 0) {
               handleModalOpen(false);
@@ -180,8 +137,8 @@ const MenuPage: React.FC = () => {
             <Input />
           </Form.Item>
           <Form.Item
-            name={'menuName'}
-            label={'菜单名称'}
+            name={'departmentName'}
+            label={'部门名称'}
             rules={[{ required: true }]}
           >
             <Input />
@@ -193,27 +150,10 @@ const MenuPage: React.FC = () => {
             <TreeSelect treeData={dataSource} placeholder="请选择上级菜单" />
           </Form.Item>
           <Form.Item
-            name={'menuIcon'}
-            label={'菜单图标'}
+            name={'description'}
+            label={'部门描述'}
           >
-            <Input onClick={() => setIconVisible(true)}
-              prefix={<CreateIcon name={form.getFieldValue('menuIcon')} />}
-              onKeyDown={(e) => e.preventDefault()} suffix={<SearchOutlined />} />
-          </Form.Item>
-          <IconSelect visible={iconVisible} parentKey={form.getFieldValue('menuIcon')} cancelView={() => setIconVisible(false)} submitView={setIcon} />
-          <Form.Item
-            name={'menuSort'}
-            label={'菜单顺序'}
-            rules={[{ required: true }]}
-          >
-            <InputNumber step={1} min={1} />
-          </Form.Item>
-          <Form.Item
-            name={'menuPath'}
-            label={'菜单路由'}
-            rules={[{ required: true }]}
-          >
-            <Input />
+            <Input.TextArea />
           </Form.Item>
         </Form>
       </FormSubmitModal>
@@ -233,7 +173,7 @@ const MenuPage: React.FC = () => {
             description="是否删除当前数据?"
             icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
             onConfirm={async () => {
-              const res = await post('/menu/delete', { data: [...selectedRowKeys] })
+              const res = await post('/dept/delete', { data: [...selectedRowKeys] })
               if (res.code === 0) {
                 message.info('删除成功');
                 actionRef.current?.reload();
@@ -250,7 +190,7 @@ const MenuPage: React.FC = () => {
           },
         }}
         request={async () => {
-          const res = await post<SysMenu[]>('/menu/page', { data: {} });
+          const res = await post<SysDept[]>('/dept/page', { data: {} });
           if (res && res.data) {
             const tree = listToTree(res.data);
             setDataSource(tree)
@@ -266,4 +206,4 @@ const MenuPage: React.FC = () => {
   );
 };
 
-export default MenuPage;
+export default Page;

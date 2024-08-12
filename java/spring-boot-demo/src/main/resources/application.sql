@@ -91,7 +91,6 @@ CREATE TABLE `sys_department`
 (
     `id`              int(11)               NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `department_name` varchar(50)           NOT NULL COMMENT '部门名称',
-    `department_type` smallint(1) DEFAULT 1 NOT NULL COMMENT '部门类型：0公司1部门',
     `description`     varchar(50) COMMENT '部门描述',
     `parent_id`       int(11)     DEFAULT NULL COMMENT '上级部门id',
     `status`          smallint(1) DEFAULT 1 NOT NULL COMMENT '状态 0禁用1启用',
@@ -108,6 +107,7 @@ DROP TABLE IF EXISTS `sys_job`;
 CREATE TABLE `sys_job`
 (
     `id`              int(11)     NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `parent_id`         int(11)    COMMENT '上级id',
     `job_name`        varchar(50) NOT NULL COMMENT '岗位名称',
     `description`     varchar(50) COMMENT '岗位描述',
     `dept_id`         int(11)     NOT NULL COMMENT '部门id',
