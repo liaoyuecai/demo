@@ -76,6 +76,11 @@ export default [
         path: '/sys/menu',
         component: './sys/menu',
       },
+      {
+        name: 'role',
+        path: '/sys/role',
+        component: './sys/role',
+      },
     ]
   }
 ];

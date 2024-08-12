@@ -1,15 +1,15 @@
 package com.demo.sys.service;
 
 import com.demo.core.config.jpa.CustomerBaseRepository;
-import com.demo.core.service.impl.DefaultCURDService;
+import com.demo.core.service.CURDService;
+import com.demo.sys.datasource.dao.SysJobRepository;
 import com.demo.sys.datasource.entity.SysJob;
-import com.demo.sys.datasource.entity.SysUser;
 import org.springframework.stereotype.Service;
 
 @Service("jobService")
-public class JobService extends DefaultCURDService<SysJob> {
+public class JobService extends CURDService<SysJob, SysJobRepository> {
 
-    public JobService(CustomerBaseRepository<SysJob> repository) {
+    public JobService(SysJobRepository  repository) {
         super(repository);
     }
 }

@@ -105,7 +105,7 @@ export async function removeRule(options?: { [key: string]: any }) {
  * @param options 
  * @returns 
  */
-export async function post<T>(url: string, params: any, options?: { [key: string]: any }) {
+export async function post<T>(url: string, params?: {}, options?: { [key: string]: any }) {
   return request<API.Response<T>>(process.env.baseUrl + url, {
     method: 'POST',
     data: {

@@ -1,15 +1,15 @@
 package com.demo.sys.service;
 
 import com.demo.core.config.jpa.CustomerBaseRepository;
-import com.demo.core.service.impl.DefaultCURDService;
+import com.demo.core.service.CURDService;
+import com.demo.sys.datasource.dao.SysPermissionRepository;
 import com.demo.sys.datasource.entity.SysPermission;
-import com.demo.sys.datasource.entity.SysUser;
 import org.springframework.stereotype.Service;
 
 @Service("permissionService")
-public class PermissionService extends DefaultCURDService<SysPermission> {
+public class PermissionService extends CURDService<SysPermission, SysPermissionRepository> {
 
-    public PermissionService(CustomerBaseRepository<SysPermission> repository) {
+    public PermissionService(SysPermissionRepository repository) {
         super(repository);
     }
 }

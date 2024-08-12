@@ -1,26 +1,19 @@
-import { addRule, post, removeRule, rule, updateRule } from '@/services/ant-design-pro/api';
-import Icon, { DeleteOutlined, ExclamationCircleFilled, PlusOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns, ProDescriptionsItemProps, ProFormInstance } from '@ant-design/pro-components';
+import { post } from '@/services/ant-design-pro/api';
+import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import {
-  FooterToolbar,
-  ModalForm,
   PageContainer,
-  ProDescriptions,
-  ProFormDigit,
-  ProFormDigitRange,
-  ProFormText,
-  ProFormTextArea,
-  ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Form, Input, InputNumber, message, Modal, Popconfirm, TreeSelect } from 'antd';
-import React, { lazy, useEffect, useRef, useState } from 'react';
+import { Button, Form, Input, InputNumber, message, Popconfirm, Switch, TreeSelect } from 'antd';
+import React, { useRef, useState } from 'react';
 import IconSelect from '@/components/utils/IconSelect';
 import FormSubmitModal from '@/components/common/FormSubmitModal';
 import CreateIcon from '@/components/common/CreateIcon';
 export type SysMenu = {
   id?: number;
   parentId?: number;
+  status?: number;
   menuSort?: number;
   menuName?: string;
   menuPath?: string;
@@ -31,6 +24,7 @@ type SysMenuTreeNode = {
   id: number;
   key?: number;
   value?: number;
+  status?: number;
   title?: string;//title = menuName
   parentId?: number;
   menuSort?: number;
@@ -84,6 +78,7 @@ const MenuPage: React.FC = () => {
         id: menu.id ? menu.id : 0,
         key: menu.id,
         value: menu.id,
+        status: menu.status,
         title: menu.menuName,
         parentId: menu.parentId,
         menuSort: menu.menuSort,
@@ -117,13 +112,7 @@ const MenuPage: React.FC = () => {
   };
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<any>([]);
-  const onSelectChange = (rowKeys: any) => {
-    setSelectedRowKeys(rowKeys);
-  };
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: onSelectChange,
-  };
+
 
 
 
@@ -137,6 +126,20 @@ const MenuPage: React.FC = () => {
           handleModalOpen(true);
         }}>{value}</a>;
       }
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      render(dom, record) {
+        return <Switch checkedChildren="开启" unCheckedChildren="关闭"
+          onChange={async () => {
+            const res = await post('/menu/save', { data: { ...record, status: dom === 1 ? 0 : 1 } })
+            if (res.code === 0) {
+              actionRef.current?.reload();
+            }
+          }}
+          checked={dom === 1} />;
+      },
     },
     {
       title: '排序',
@@ -192,6 +195,7 @@ const MenuPage: React.FC = () => {
           <Form.Item
             name={'menuIcon'}
             label={'菜单图标'}
+            onBlur={() => setIconVisible(false)}
           >
             <Input onClick={() => setIconVisible(true)}
               prefix={<CreateIcon name={form.getFieldValue('menuIcon')} />}
@@ -243,7 +247,6 @@ const MenuPage: React.FC = () => {
         search={false}
         rowSelection={{
           onChange: (selectedRowKeys) => {
-            console.log(selectedRowKeys);
             setSelectedRowKeys(selectedRowKeys);
           },
         }}

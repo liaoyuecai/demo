@@ -1,4 +1,4 @@
-package com.demo.core.service;
+package com.demo.core.config.jpa;
 
 import lombok.Getter;
 
@@ -14,6 +14,12 @@ public class QueryCriteria {
     private String columnName;
 
     private Expression expression;
+
+    public QueryCriteria(String columnName, Expression expression, Object parameter) {
+        this.columnName = columnName;
+        this.expression = expression;
+        this.parameter = parameter;
+    }
 
     /**
      * 条件表达式

@@ -7,6 +7,7 @@ import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dto.ResetPassword;
 import com.demo.sys.service.UserService;
 import jakarta.annotation.Resource;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +23,8 @@ public class AuthController {
 
 
     @PostMapping("/current")
-    public ApiHttpResponse<AuthUserCache> current(@RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_USER_DETAILS) AuthUserCache userDetails) {
-        userService.currentUser(userDetails);
-        return ApiHttpResponse.success(userDetails);
+    public ApiHttpResponse<AuthUserCache> current(@RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_AUTHENTICATION) Authentication authentication) {
+        return ApiHttpResponse.success(userService.currentUser(authentication));
     }
 
 

@@ -1,6 +1,5 @@
 package com.demo.core.config.jpa;
 
-import com.demo.core.service.QueryCriteria;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,57 +32,76 @@ public interface CustomerBaseRepository<T> extends JpaRepository<T, Integer>, Jp
     /**
      * 直接输入原生sql查询
      *
-     * @param sql    查询语句
-     * @param clazz  返回实体类型
-     * @param params 查询参数列表
+     * @param query 查询参数
+     * @param clazz 返回实体类型
      * @param <R>
      * @return
      */
-    <R> List<R> customQuery(String sql, Class<R> clazz, List<Object> params);
+    <R> List<R> customQuery(CustomQuery query, Class<R> clazz);
+
+    /**
+     * 直接输入原生sql查询
+     * 返回类型与entity一致
+     *
+     * @param query
+     * @return
+     */
+    List<T> customQuery(CustomQuery query);
 
     /**
      * 直接输入原生sql查询(复杂条件)
      * 返回类型与entity一致
      *
-     * @param sql
-     * @param criteria
+     * @param query
      * @return
      */
-    List<T> customQueryCriteria(String sql, List<QueryCriteria> criteria);
+    List<T> customQuery(CustomCriteriaQuery query);
 
     /**
      * 直接输入原生sql查询(复杂条件)
      * 返回类型与entity可以不一致
      *
-     * @param sql
+     * @param query
      * @param clazz
-     * @param criteria
      * @return
      */
-    <R> List<R> customQueryCriteria(String sql, Class<R> clazz, List<QueryCriteria> criteria);
+    <R> List<R> customQuery(CustomCriteriaQuery query, Class<R> clazz);
 
     /**
      * 直接输入原生sql查询(复杂条件)
      * 分页
      * 返回类型与entity一致
      *
-     * @param sql
-     * @param criteria
      * @return
      */
-    Page<T> customQueryCriteriaPage(String sql, List<QueryCriteria> criteria, Pageable pageable);
+    Page<T> customQuery(CustomCriteriaQuery query, Pageable pageable);
+
+
+    /**
+     * 直接输入原生sql查询(复杂条件)
+     * 分页
+     * 返回类型与entity一致
+     *
+     * @return
+     */
+    Page<T> customQuery(CustomQuery query, Pageable pageable);
+    /**
+     * 直接输入原生sql查询(复杂条件)
+     * 分页
+     * 返回类型与entity一致
+     *
+     * @return
+     */
+    <R> Page<R> customQuery(CustomQuery query,Class<R> clazz, Pageable pageable);
 
     /**
      * 直接输入原生sql查询(复杂条件)
      * 分页
      * 返回类型与entity可以不一致
      *
-     * @param sql
-     * @param clazz
-     * @param criteria
      * @return
      */
-    <R> Page<R> customQueryCriteriaPage(String sql, Class<R> clazz, List<QueryCriteria> criteria, Pageable pageable);
+    <R> Page<R> customQuery(CustomCriteriaQuery query, Class<R> clazz, Pageable pageable);
 
 
     /**

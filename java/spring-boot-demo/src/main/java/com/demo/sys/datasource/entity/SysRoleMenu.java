@@ -15,4 +15,12 @@ public class SysRoleMenu {
     protected Integer id;
     private Integer roleId;
     private Integer menuId;
+
+    public SysRoleMenu() {
+    }
+
+    public SysRoleMenu(Integer roleId, Integer menuId) {
+        this.roleId = roleId;
+        this.menuId = menuId;
+    }
 }

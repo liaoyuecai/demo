@@ -17,5 +17,4 @@ public interface SysRoleRepository extends CustomerBaseRepository<SysRole> {
             """)
     List<SysRole> findRolesByUserId(@Param("userId") int userId);
 
-
 }

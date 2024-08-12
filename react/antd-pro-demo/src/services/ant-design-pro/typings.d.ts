@@ -4,10 +4,10 @@
 declare namespace API {
   type CurrentUser = {
     name?: string;
-    token?:string;
+    token?: string;
     avatar?: string;
     userid?: string;
-    menuData?:MenuData[];
+    menuData?: MenuData[];
     email?: string;
     signature?: string;
     title?: string;
@@ -113,13 +113,13 @@ declare namespace API {
     current: number;
     pageSize: number;
     total: number;
-    data: T[];
+    list: T[];
   };
   type MenuData = {
-    key:string;
-    name:string;
-    icon?:string;
-    path:string;
-    children?:MenuData[];
+    id: number;
+    parentId?: number;
+    menuName: string,
+    menuIcon?: string;
+    menuPath: string;
   };
 }

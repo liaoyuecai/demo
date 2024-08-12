@@ -10,6 +10,7 @@ import { post } from '@/services/ant-design-pro/api';
 import React from 'react';
 import * as allIcons from '@ant-design/icons';
 import { Row } from 'antd';
+import CreateIcon from './components/common/CreateIcon';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 
@@ -63,26 +64,49 @@ export async function getInitialState(): Promise<{
   };
 }
 
-const convertMeanItem = (menus: API.MenuData[]) => {
-  const meunData: MenuDataItem[] = [];
-  menus.forEach((item) => {
-    const iconStr: string|undefined = item.icon
-    const convertNode: MenuDataItem = iconStr?{
-      key: item.key,
-      name: item.name,
-      icon: <div style={{ marginRight: 5 }}>{React.createElement(allIcons[iconStr])}</div>,
-      path: item.path
-    }:{
-      key: item.key,
-      name: item.name,
-      path: item.path
+
+function listToTree(menus: API.MenuData[]): MenuDataItem[] {
+  // 创建一个map来存储所有节点，key为id  
+  const menuMap: Record<number, MenuDataItem> = {};
+  // 创建一个数组来存储根节点（即没有parentId的节点）  
+  const rootList: MenuDataItem[] = [];
+
+  // 第一步：初始化节点并放入map中  
+  menus.forEach(menu => {
+    const menuItemId = menu.id;
+    const menuItem: MenuDataItem = {
+      name: menu.menuName,
+      key: menu.menuName,
+      icon: menu.menuIcon ? <div style={{ marginRight: 5 }}><CreateIcon name={menu.menuIcon} /></div> : undefined, // 假设转换为React元素  
+      path: menu.menuPath,
+    };
+    menuMap[menuItemId] = menuItem;
+
+    // 如果没有parentId，则认为是根节点  
+    if (!menu.parentId) {
+      rootList.push(menuItem);
     }
-    if (item.children && item.children.length > 0)
-      convertNode.children = convertMeanItem(item.children);
-    meunData.push(convertNode)
   });
-  return meunData;
+
+  // 第二步：构建树形结构  
+  menus.forEach(menu => {
+    const menuItemId = menu.id;
+    const currentItem = menuMap[menuItemId];
+
+    // 如果当前节点有parentId，则找到其父节点并添加到其children中  
+    if (menu.parentId !== undefined) {
+      const parentId = menu.parentId;
+      if (menuMap[parentId]) {
+        if (menuMap[parentId].children)
+          menuMap[parentId].children.push(currentItem);
+        else menuMap[parentId].children = [currentItem]
+      }
+    }
+  });
+
+  return rootList;
 }
+
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
@@ -125,7 +149,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       locale: false,
       request: async (params, defaultMenuData) => {
         if (initialState?.currentUser && initialState.currentUser?.menuData)
-          return convertMeanItem(initialState?.currentUser?.menuData);
+          return listToTree(initialState?.currentUser?.menuData);
         return [];
       },
     },

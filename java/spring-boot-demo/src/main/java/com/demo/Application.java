@@ -1,6 +1,8 @@
 package com.demo;
 
 
+import com.demo.core.authentication.GoogleCacheTokenManager;
+import com.demo.core.authentication.TokenManager;
 import com.demo.core.config.jpa.CustomerBaseRepositoryImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,6 +21,10 @@ public class Application {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public TokenManager tokenManager(){
+        return new GoogleCacheTokenManager();
     }
 
     public static void main(String[] args) {

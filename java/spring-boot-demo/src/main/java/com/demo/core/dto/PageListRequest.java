@@ -1,6 +1,8 @@
 package com.demo.core.dto;
 
 
+import com.demo.core.config.jpa.CustomCriteriaQuery;
+import com.demo.core.config.jpa.CustomQuery;
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
 import com.demo.core.utils.StringUtils;
@@ -34,7 +36,8 @@ public class PageListRequest<T> extends ApiHttpRequest<T> {
 
 
     public Pageable toPageable() {
-
+        if (this.getCurrent() == null || this.getPageSize() == null)
+            throw new GlobalException(ErrorCode.PARAMS_ERROR_REQUEST_PARAMS_LESS);
         if (orders != null && !orders.isEmpty())
             return PageRequest.of(this.getCurrent() - 1, this.getPageSize(),
                     Sort.by(orders.stream().map(i -> i.convert()).toList()));
@@ -67,7 +70,7 @@ public class PageListRequest<T> extends ApiHttpRequest<T> {
      *
      * @return
      */
-    public String toQuerySql() {
+    protected String toDefaultQuerySql() {
         Type type = this.getClass().getGenericSuperclass();
         if (!(type instanceof ParameterizedType))
             throw new GlobalException(ErrorCode.CODE_ERROR, "调用父类toQuerySql函数时必须继承并指定泛型");
@@ -89,5 +92,24 @@ public class PageListRequest<T> extends ApiHttpRequest<T> {
         return sql.toString();
     }
 
+    /**
+     * 自定义查询，使用时继承并重写
+     * 主要用于懒得重写构造一个匹配DTO的Repository时使用
+     *
+     * @return
+     */
+    public CustomQuery getCustomQuery() {
+        return null;
+    }
+
+    /**
+     * 自定义查询（复杂条件），使用时继承并重写
+     * 主要用于懒得重写构造一个匹配DTO的Repository时使用
+     *
+     * @return
+     */
+    public CustomCriteriaQuery getCustomCriteriaQuery() {
+        return null;
+    }
 
 }

@@ -28,7 +28,6 @@ CREATE TABLE `sys_role`
     `description`     varchar(50) DEFAULT NULL COMMENT '角色描述',
     `create_time`     datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`       int(11)     NOT NULL COMMENT '创建人',
-    `role_type`       smallint(1) DEFAULT 1 COMMENT '角色类型：1内部员工，2外部客户',
     `update_time`     datetime    DEFAULT NULL COMMENT '更新时间',
     `update_by`   int(11)   COMMENT '修改人',
     `deleted`         smallint(1) DEFAULT 0 COMMENT '删除状态',

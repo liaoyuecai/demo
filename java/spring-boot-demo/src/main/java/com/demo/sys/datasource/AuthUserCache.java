@@ -1,7 +1,7 @@
 package com.demo.sys.datasource;
 
 import com.demo.core.authentication.AuthenticationUser;
-import com.demo.sys.datasource.dto.WebMenu;
+import com.demo.sys.datasource.entity.SysMenu;
 import com.demo.sys.datasource.entity.SysRole;
 import com.demo.sys.datasource.entity.SysUser;
 import lombok.Getter;
@@ -19,7 +19,7 @@ public class AuthUserCache extends AuthenticationUser {
     private boolean isRoot = false;
     private String avatar;
     private List<SysRole> roles;
-    private List<WebMenu> menuData;
+    private List<SysMenu> menuData;
 
     public AuthUserCache(SysUser user) {
         super(user.getUsername(), user.getPassword());
