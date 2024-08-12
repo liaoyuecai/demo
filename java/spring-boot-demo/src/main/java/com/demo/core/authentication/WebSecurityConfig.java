@@ -25,6 +25,9 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class WebSecurityConfig {
 
+    public final static String HTTP_HEADER_AUTHORIZATION = "Authorization";
+    public final static String REQUEST_ATTRIBUTE_AUTHENTICATION = "authentication";
+    public final static String REQUEST_ATTRIBUTE_USER_DETAILS = "userDetails";
 
     @Autowired(required = false)
     TokenManager tokenManager;
@@ -71,8 +74,9 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests((authorizeHttpRequests) ->
                 authorizeHttpRequests
                         .requestMatchers("/health").permitAll()
+                        .requestMatchers("/static/**").permitAll()
                         .anyRequest().authenticated()
-                );
+        );
         // 禁用默认的formLogin
         http.formLogin((formLogin) -> formLogin.disable());
         // 禁用httpBasic

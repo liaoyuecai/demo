@@ -1,6 +1,7 @@
 package com.demo.core.config.jpa;
 
-import com.demo.core.service.QueryCriteria;
+import com.demo.core.exception.ErrorCode;
+import com.demo.core.exception.GlobalException;
 import com.demo.core.utils.StringUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -40,77 +41,141 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
     @Override
     public int deleteUpdateByIds(Collection<Integer> ids) {
         StringBuilder sb = new StringBuilder("update ")
-                .append(getTableName()).append("set deleted = 1 where id in(?)");
+                .append(getTableName()).append(" set deleted = 1 where id in(?)");
         Query query = entityManager.createNativeQuery(sb.toString());
         query.setParameter(1, ids);
         return query.executeUpdate();
     }
 
     @Override
-    public <R> List<R> customQuery(String sql, Class<R> clazz, List<Object> params) {
-        Query query = entityManager.createNativeQuery(sql, clazz);
-        if (params != null && !params.isEmpty()) {
-            for (int i = 0, l = params.size(); i < l; i++)
-                query.setParameter(i + 1, params.get(i));
+    public <R> List<R> customQuery(CustomQuery customQuery, Class<R> clazz) {
+        if (customQuery == null || customQuery.getSql() == null)
+            throw new GlobalException(ErrorCode.CODE_ERROR_PARAMS_NOT_FOUND);
+        Query query = entityManager.createNativeQuery(customQuery.getSql(), clazz);
+        if (customQuery.getParams() != null && !customQuery.getParams().isEmpty()) {
+            for (int i = 0, l = customQuery.getParams().size(); i < l; i++)
+                query.setParameter(i + 1, customQuery.getParams().get(i));
         }
         return query.getResultList();
     }
 
     @Override
-    public List<T> customQueryCriteria(String sql, List<QueryCriteria> criteria) {
-        return this.customQueryCriteria(sql, clazz, criteria);
+    public List<T> customQuery(CustomQuery query) {
+        return this.customQuery(query, this.clazz);
     }
 
     @Override
-    public <R> List<R> customQueryCriteria(String sql, Class<R> clazz, List<QueryCriteria> criteria) {
-        if (criteria != null && !criteria.isEmpty()) {
-            StringBuilder sqlStr = new StringBuilder(sql);
-            for (int i = 0, l = criteria.size(); i < l; i++) {
-                if (i == 0) sqlStr.append(" where ");
-                sqlStr.append(criteria.get(i).whereSql());
-                if (i != l - 1) sqlStr.append(" and ");
+    public List<T> customQuery(CustomCriteriaQuery criteriaQuery) {
+        return this.customQuery(criteriaQuery, this.clazz);
+    }
+
+    @Override
+    public <R> List<R> customQuery(CustomCriteriaQuery criteriaQuery, Class<R> clazz) {
+        if (criteriaQuery == null || criteriaQuery.getQuerySql() == null)
+            throw new GlobalException(ErrorCode.CODE_ERROR_PARAMS_NOT_FOUND);
+        if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
+            StringBuilder sqlStr = new StringBuilder(criteriaQuery.getQuerySql());
+            boolean where = false;
+            for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
+                if (criteriaQuery.getParams().get(i).getParameter() != null) {
+                    if (!where) {
+                        sqlStr.append(" where ");
+                        where = true;
+                    }
+                    sqlStr.append(criteriaQuery.getParams().get(i).whereSql());
+                    if (i != l - 1) sqlStr.append(" and ");
+                }
             }
             Query query = entityManager.createNativeQuery(sqlStr.toString(), clazz);
-            for (int i = 0, l = criteria.size(); i < l; i++) {
-                query.setParameter(i + 1, criteria.get(i).getParameter());
+            if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
+                for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
+                    if (criteriaQuery.getParams().get(i).getParameter() != null) {
+                        query.setParameter(i + 1, criteriaQuery.getParams().get(i).getParameter());
+                    }
+                }
             }
             return query.getResultList();
         }
+        return entityManager.createNativeQuery(criteriaQuery.getQuerySql(), clazz).getResultList();
 
-        return entityManager.createNativeQuery(sql, clazz).getResultList();
     }
 
     @Override
-    public Page<T> customQueryCriteriaPage(String sql, List<QueryCriteria> criteria, Pageable pageable) {
-        return this.customQueryCriteriaPage(sql, clazz, criteria, pageable);
+    public Page<T> customQuery(CustomCriteriaQuery query, Pageable pageable) {
+        return this.customQuery(query, this.clazz, pageable);
+    }
+
+
+    @Override
+    public Page<T> customQuery(CustomQuery query, Pageable pageable) {
+        return this.customQuery(query, this.clazz, pageable);
     }
 
     @Override
-    public <R> Page<R> customQueryCriteriaPage(String sql, Class<R> clazz, List<QueryCriteria> criteria, Pageable pageable) {
-        String querySql = sql;
-        if (criteria != null && !criteria.isEmpty()) {
-            StringBuilder sqlStr = new StringBuilder(sql);
-            for (int i = 0, l = criteria.size(); i < l; i++) {
-                if (i == 0) sqlStr.append(" where ");
-                sqlStr.append(criteria.get(i).whereSql());
-                if (i != l - 1) sqlStr.append(" and ");
-            }
-            querySql = sqlStr.toString();
-        }
+    public <R> Page<R> customQuery(CustomQuery customQuery, Class<R> clazz, Pageable pageable) {
+        if (customQuery == null || customQuery.getSql() == null)
+            throw new GlobalException(ErrorCode.CODE_ERROR_PARAMS_NOT_FOUND);
+        String querySql = customQuery.getSql();
         String countSql = "SELECT COUNT(0) " + querySql.toString().substring(querySql.toString().toLowerCase().indexOf("from"));
-        querySql.equals(getSortStr(pageable));
+        querySql += getSortStr(pageable);
         Query countQuery = entityManager.createNativeQuery(countSql);
-        Query listQuery = entityManager.createNativeQuery(querySql.toString());
-        if (criteria != null && !criteria.isEmpty()) {
-            for (int i = 0, l = criteria.size(); i < l; i++) {
-                countQuery.setParameter(i + 1, criteria.get(i).getParameter());
-                listQuery.setParameter(i + 1, criteria.get(i).getParameter());
+        Query listQuery = entityManager.createNativeQuery(querySql.toString(), clazz);
+        if (customQuery.getParams() != null && !customQuery.getParams().isEmpty()) {
+            for (int i = 0, l = customQuery.getParams().size(); i < l; i++) {
+                countQuery.setParameter(i + 1, customQuery.getParams().get(i));
+                listQuery.setParameter(i + 1, customQuery.getParams().get(i));
             }
         }
         listQuery.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
         listQuery.setMaxResults(pageable.getPageSize());
         return new PageImpl<>(listQuery.getResultList(), pageable, (long) countQuery.getSingleResult());
     }
+
+
+    @Override
+    public <R> Page<R> customQuery(CustomCriteriaQuery criteriaQuery, Class<R> clazz, Pageable pageable) {
+        if (criteriaQuery == null || criteriaQuery.getQuerySql() == null || criteriaQuery.getCountSql() == null)
+            throw new GlobalException(ErrorCode.CODE_ERROR_PARAMS_NOT_FOUND);
+        String querySql = criteriaQuery.getQuerySql();
+        String countSql = criteriaQuery.getCountSql();
+        if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
+            StringBuilder querySqlStr = new StringBuilder(querySql);
+            StringBuilder countSqlStr = new StringBuilder(countSql);
+            boolean where = false;
+            for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
+                if (criteriaQuery.getParams().get(i).getParameter() != null) {
+                    if (!where) {
+                        querySqlStr.append(" where ");
+                        countSqlStr.append(" where ");
+                        where = true;
+                    }
+                    querySqlStr.append(criteriaQuery.getParams().get(i).whereSql());
+                    countSqlStr.append(criteriaQuery.getParams().get(i).whereSql());
+                    if (i != l - 1) {
+                        querySqlStr.append(" and ");
+                        countSqlStr.append(" and ");
+                    }
+                }
+            }
+            querySql = querySqlStr.toString();
+            countSql = countSqlStr.toString();
+        }
+        querySql += getSortStr(pageable);
+        Query countQuery = entityManager.createNativeQuery(countSql);
+        Query listQuery = entityManager.createNativeQuery(querySql.toString(), clazz);
+        if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
+            for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
+                if (criteriaQuery.getParams().get(i).getParameter() != null) {
+                    countQuery.setParameter(i + 1, criteriaQuery.getParams().get(i).getParameter());
+                    listQuery.setParameter(i + 1, criteriaQuery.getParams().get(i).getParameter());
+                }
+            }
+        }
+        listQuery.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
+        listQuery.setMaxResults(pageable.getPageSize());
+        return new PageImpl<>(listQuery.getResultList(), pageable, (long) countQuery.getSingleResult());
+    }
+
 
     /**
      * 组合排序字段
@@ -139,13 +204,13 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
 
     @Override
     public List<T> findNotDeleted() {
-        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE deleted = 0");
+        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE deleted != 1");
         return entityManager.createNativeQuery(sb.toString(), clazz).getResultList();
     }
 
     @Override
     public List<T> findNotDeletedAndStatus() {
-        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE status = 1 and deleted = 0");
+        StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName()).append(" WHERE status != 0 and deleted != 1");
         return entityManager.createNativeQuery(sb.toString(), clazz).getResultList();
     }
 

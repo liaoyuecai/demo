@@ -24,25 +24,30 @@ public class GoogleCacheTokenManager implements TokenManager {
             .removalListener((RemovalListener<String, Authentication>) notification -> log.info("remove cause{}:{}", notification.getKey(), notification.getCause()))
             .build();
 
-
+    @Override
     public String generateToken(Authentication authentication) {
         String token = UUID.randomUUID().toString();
         TokenCache.put(token, authentication);
         return token;
     }
 
-
+    @Override
     public void removeToken(String token) {
         TokenCache.invalidate(token);
     }
 
 
-    public Authentication getAuthenticationByToken(String token) {
-        Authentication authentication = TokenCache.getIfPresent(token);
-        return authentication;
+    @Override
+    public void refreshToken(String token, Authentication authentication) {
+        TokenCache.put(token, authentication);
     }
 
+    @Override
+    public Authentication getAuthenticationByToken(String token) {
+        return TokenCache.getIfPresent(token);
+    }
 
+    @Override
     public void delayExpired(String token) {
         //google cache 在之前获取时自动续期，这里不需要再调用逻辑
     }

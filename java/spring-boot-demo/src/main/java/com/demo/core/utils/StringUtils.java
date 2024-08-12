@@ -4,6 +4,7 @@ public final class StringUtils {
     /**
      * 将驼峰命名的字符串转换为‘_’作为分隔的全小写字符串
      * 常用作bean属性转行为数据库字段
+     *
      * @param camelCaseStr
      * @return
      */

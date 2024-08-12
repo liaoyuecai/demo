@@ -125,7 +125,7 @@ public final class JsonUtils {
     }
 
 
-   static class DoubleDefaultAdapter implements JsonSerializer<Double>, JsonDeserializer<Double> {
+    static class DoubleDefaultAdapter implements JsonSerializer<Double>, JsonDeserializer<Double> {
 
         @Override
         public Double deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
@@ -150,7 +150,7 @@ public final class JsonUtils {
         }
     }
 
-   static class FloatDefaultAdapter implements JsonSerializer<Float>, JsonDeserializer<Float> {
+    static class FloatDefaultAdapter implements JsonSerializer<Float>, JsonDeserializer<Float> {
 
         @Override
         public Float deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
@@ -175,7 +175,7 @@ public final class JsonUtils {
         }
     }
 
-   static class IntDefaultAdapter implements JsonSerializer<Integer>, JsonDeserializer<Integer> {
+    static class IntDefaultAdapter implements JsonSerializer<Integer>, JsonDeserializer<Integer> {
 
         @Override
         public Integer deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
@@ -200,7 +200,7 @@ public final class JsonUtils {
         }
     }
 
-   static class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+    static class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
 
         @Override
         public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
@@ -214,7 +214,7 @@ public final class JsonUtils {
         }
     }
 
-   static class LongDefaultAdapter implements JsonSerializer<Long>, JsonDeserializer<Long> {
+    static class LongDefaultAdapter implements JsonSerializer<Long>, JsonDeserializer<Long> {
 
         @Override
         public Long deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
@@ -238,6 +238,7 @@ public final class JsonUtils {
             return new JsonPrimitive(src);
         }
     }
+
     static class ShortDefaultAdapter implements JsonSerializer<Short>, JsonDeserializer<Short> {
 
         @Override

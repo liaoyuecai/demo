@@ -19,7 +19,6 @@ public class IgnoreNullEventListener extends DefaultMergeEventListener {
     public static final IgnoreNullEventListener INSTANCE = new IgnoreNullEventListener();
 
 
-
     @Override
     protected void copyValues(EntityPersister persister, Object entity, Object target, SessionImplementor source, MergeContext copyCache) {
         if (entity == target) {

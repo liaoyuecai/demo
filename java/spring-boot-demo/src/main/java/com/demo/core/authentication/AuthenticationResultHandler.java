@@ -82,7 +82,7 @@ public class AuthenticationResultHandler {
         this.accessDenied = (_, response, accessDeniedException) -> {
             response.setContentType("application/json;charset=utf-8");
             response.setStatus(HttpStatus.OK.value());
-            response.getWriter().write(objectMapper.writeValueAsString(AuthenticationResponse.tokenError("权限异常:"+accessDeniedException.getMessage())));
+            response.getWriter().write(objectMapper.writeValueAsString(AuthenticationResponse.tokenError("权限异常:" + accessDeniedException.getMessage())));
         };
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
