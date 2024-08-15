@@ -1,7 +1,6 @@
 package com.demo.sys.controller;
 
-import com.demo.core.aop.RequestSave;
-import com.demo.core.aop.RequestSelect;
+import com.demo.core.aop.RequestBaseEntitySet;
 import com.demo.core.authentication.WebSecurityConfig;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
@@ -23,28 +22,27 @@ public class MenuController {
 
 
     @PostMapping("/save")
-    @RequestSave
+    @RequestBaseEntitySet
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysMenu> request) {
-        menuService.save(request.getData());
+        menuService.save(request);
         return request.success();
     }
 
     @PostMapping("/page")
-    @RequestSelect
     public ApiHttpResponse<List<SysMenu>> page(@RequestBody MenuPageRequest request) {
         return request.success(menuService.findList(request.toExample()));
     }
 
 
     @PostMapping("/own")
-    public ApiHttpResponse<List<SysMenu>> own(@RequestBody ApiHttpRequest request,
-                                              @RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_USER_DETAILS) AuthUserCache userDetails) {
-        return request.success(menuService.findOwnList(userDetails));
+    public ApiHttpResponse<List<SysMenu>> own(@RequestBody ApiHttpRequest request) {
+        return request.success(menuService.findOwnList((AuthUserCache) request.getUser()));
     }
 
     @PostMapping("/delete")
+    @RequestBaseEntitySet
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
-        menuService.deleteUpdate(request.getData());
+        menuService.deleteUpdate(request);
         return request.success();
     }
 }

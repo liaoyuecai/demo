@@ -17,7 +17,6 @@ import java.util.List;
  * @param <T>
  */
 @NoRepositoryBean
-@Transactional
 public interface CustomerBaseRepository<T> extends JpaRepository<T, Integer>, JpaSpecificationExecutor<T> {
 
 

@@ -20,7 +20,7 @@ public class AuthenticationUser implements UserDetails {
     protected Integer id;
     protected String username;
     protected String password;
-
+    protected boolean isRoot = false;
     private String token;
 
     private List<GrantedAuthority> authorities = new ArrayList<>();

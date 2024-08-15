@@ -17,6 +17,8 @@ public enum ErrorCode {
     ACCESS_AUTHORITY_ERROR(3003, "无访问权限"),
     ACCESS_CHECK_CODE_ERROR(3004, "校验码异常"),
     ACCESS_ACCOUNT_LOCK_ERROR(3005, "账号锁定"),
+    ACCESS_DATA_ERROR(3006, "数据权限异常"),
+    ACCESS_DATA_UPDATE_ERROR(300601, "没有修改当前数据的权限"),
 
     DATASOURCE_CONNECT_ERROR(-1000, "数据库连接异常"),
     PARAMS_ERROR(4001, "参数异常"),
@@ -24,6 +26,7 @@ public enum ErrorCode {
     PARAMS_ERROR_OLD_PWD(400102, "旧密码错误"),
     PARAMS_ERROR_REQUEST_DATA_NOT_FOUND(400103, "请求参数为空"),
     PARAMS_ERROR_REQUEST_PARAMS_LESS(400104, "缺失请求参数"),
+    PARAMS_ERROR_USERNAME_REPEAT(400105, "账户名重复"),
     CODE_ERROR(4002, "代码异常"),
     CODE_ERROR_PARAMS_NOT_FOUND(400201, "找不到对应的参数"),
     CODE_ERROR_PARAMS_TYPE_ERROR(400202, "参数类型异常"),

@@ -1,7 +1,6 @@
 package com.demo.sys.controller;
 
-import com.demo.core.aop.RequestSave;
-import com.demo.core.aop.RequestSelect;
+import com.demo.core.aop.RequestBaseEntitySet;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
 import com.demo.core.dto.DeleteRequest;
@@ -24,14 +23,13 @@ public class DeptController {
 
 
     @PostMapping("/save")
-    @RequestSave
+    @RequestBaseEntitySet
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysDepartment> request) {
-        service.save(request.getData());
+        service.save(request);
         return request.success();
     }
 
     @PostMapping("/page")
-    @RequestSelect
     public ApiHttpResponse<List<SysDepartment>> page(@RequestBody DeptPageRequest request) {
         return request.success(service.findList(request.toExample()));
     }
@@ -44,8 +42,9 @@ public class DeptController {
 
 
     @PostMapping("/delete")
+    @RequestBaseEntitySet
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
-        service.deleteUpdate(request.getData());
+        service.deleteUpdate(request);
         return request.success();
     }
 }

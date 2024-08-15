@@ -16,11 +16,11 @@ public interface SysMenuRepository extends CustomerBaseRepository<SysMenu> {
             SELECT m FROM SysMenu m
             JOIN SysRoleMenu rm ON m.id = rm.menuId
             JOIN SysRole r ON r.id = rm.roleId
-             WHERE r.roleKey IN :roleKeys AND m.status = 1 AND m.deleted != 1
+             WHERE r.id IN :roleIds AND m.status = 1 AND m.deleted != 1
              AND  r.status = 1 AND r.deleted != 1
              ORDER BY m.menuSort
             """)
-    List<SysMenu> findByRoleKeys(Collection<String> roleKeys);
+    List<SysMenu> findByRoleId(Collection<Integer> roleIds);
 
 
     @Query("""

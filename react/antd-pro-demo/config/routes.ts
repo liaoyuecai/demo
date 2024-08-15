@@ -90,7 +90,7 @@ export default [
         name: 'job',
         path: '/sys/job',
         component: './sys/job',
-      },
+      }
     ]
   }
 ];

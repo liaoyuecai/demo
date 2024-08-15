@@ -3,6 +3,7 @@ package com.demo.core.aop;
 import com.demo.core.authentication.AuthenticationUser;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
+import com.demo.core.dto.PageListRequest;
 import com.demo.core.entity.TableBaseEntity;
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
@@ -47,7 +48,7 @@ public class ControllerAspect {
         String uri = request.getRequestURI();
         Object[] args = joinPoint.getArgs();
         try {
-            params(args,joinPoint);
+            params(args, joinPoint);
             Object response = joinPoint.proceed(args);
             log.info("http uri:{}, request:{},response:{}", uri, args, response);
             return response;
@@ -69,32 +70,50 @@ public class ControllerAspect {
     void params(Object[] args, ProceedingJoinPoint joinPoint) {
         Class<?> targetCls = joinPoint.getTarget().getClass();
         MethodSignature ms = (MethodSignature) joinPoint.getSignature();
-
+        AuthenticationUser user = getUser();
+        ApiHttpRequest request = null;
         try {
+            for (Object arg : args) {
+                if (arg instanceof ApiHttpRequest) {
+                    request = (ApiHttpRequest) arg;
+                    request.setUser(user);
+                    if (arg instanceof PageListRequest && ((PageListRequest<?>) arg).getData() instanceof TableBaseEntity){
+                        ((TableBaseEntity) ((PageListRequest<?>) arg).getData()).setDeleted(0);
+                    }
+                    break;
+                }
+            }
             Method targetMethod =
                     targetCls.getDeclaredMethod(
                             ms.getName(),
                             ms.getParameterTypes());
-            if (targetMethod.isAnnotationPresent(RequestSave.class)) {
-                RequestSave save = targetMethod.getAnnotation(RequestSave.class);
-                TableBaseEntity entity = getEntity(args, save.index());
-                AuthenticationUser user = getUser();
-                if (entity.getId() == null) {
-                    entity.setCreateTime(LocalDateTime.now());
-                    entity.setStatus(1);
-                    entity.setDeleted(0);
-                    entity.setCreateBy(user.getId());
-                } else {
-                    entity.setUpdateTime(LocalDateTime.now());
-                    entity.setUpdateBy(user.getId());
+            if (targetMethod.isAnnotationPresent(RequestBaseEntitySet.class)) {
+                RequestBaseEntitySet entitySet = targetMethod.getAnnotation(RequestBaseEntitySet.class);
+                if (request != null) request.setEntitySet(entitySet);
+                RequestSetType type = entitySet.type();
+                int index = entitySet.index();
+                switch (type) {
+                    case SAVE -> {
+                        TableBaseEntity entity = getEntity(args, index);
+                        if (entity.getId() == null) {
+                            entity.setCreateTime(LocalDateTime.now());
+                            entity.setStatus(1);
+                            entity.setDeleted(0);
+                            entity.setCreateBy(user.getId());
+                        } else {
+                            entity.setUpdateTime(LocalDateTime.now());
+                            entity.setUpdateBy(user.getId());
+                        }
+                    }
+                    case SELECT -> {
+                        TableBaseEntity entity = getEntity(args, index);
+                        entity.setDeleted(0);
+                        if (entitySet.status() != -1)
+                            entity.setStatus(entitySet.status());
+                        if (entitySet.checkCreateBy())
+                            entity.setCreateBy(user.getId());
+                    }
                 }
-            }
-            if (targetMethod.isAnnotationPresent(RequestSelect.class)) {
-                RequestSelect select = targetMethod.getAnnotation(RequestSelect.class);
-                TableBaseEntity entity = getEntity(args, select.index());
-                if (select.status() != -1)
-                    entity.setStatus(select.status());
-                entity.setDeleted(0);
             }
         } catch (NoSuchMethodException e) {
             //这里几乎不可能报错，不予理会
@@ -116,6 +135,10 @@ public class ControllerAspect {
         return (TableBaseEntity) ((ApiHttpRequest<?>) param).getData();
     }
 
+    /**
+     * 获取当前用户
+     * @return
+     */
     AuthenticationUser getUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null)

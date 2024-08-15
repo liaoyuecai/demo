@@ -15,4 +15,12 @@ public class SysUserJob {
     protected Integer id;
     private Integer userId;
     private Integer jobId;
+
+    public SysUserJob() {
+    }
+
+    public SysUserJob(Integer userId, Integer jobId) {
+        this.userId = userId;
+        this.jobId = jobId;
+    }
 }

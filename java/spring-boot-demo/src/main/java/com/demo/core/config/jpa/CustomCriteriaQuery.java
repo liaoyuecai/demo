@@ -11,6 +11,7 @@ import java.util.List;
 public class CustomCriteriaQuery {
     private final String querySql;
     private String countSql;
+    private String groupBy;
 
     private List<QueryCriteria> params;
 
@@ -31,6 +32,13 @@ public class CustomCriteriaQuery {
     public CustomCriteriaQuery(String querySql, String countSql, List<QueryCriteria> params) {
         this.querySql = querySql;
         this.countSql = countSql;
+        this.params = params;
+    }
+
+    public CustomCriteriaQuery(String querySql, String countSql, String groupBy, List<QueryCriteria> params) {
+        this.querySql = querySql;
+        this.countSql = countSql;
+        this.groupBy = groupBy;
         this.params = params;
     }
 }

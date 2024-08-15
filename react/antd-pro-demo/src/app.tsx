@@ -20,7 +20,7 @@ type UserCache = {
   username: string;
   avatar: string;
   token: string;
-  menuData?: API.MenuData[]
+  menuList?: API.MenuData[]
 }
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -39,7 +39,7 @@ export async function getInitialState(): Promise<{
           name: msg.data.username,
           token: msg.data.token,
           avatar: process.env.baseUrl + msg.data.avatar,
-          menuData: msg.data?.menuData,
+          menuList: msg.data?.menuList,
         };
       }
       history.push(loginPath);
@@ -147,9 +147,9 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     menu: {
       params: initialState,
       locale: false,
-      request: async (params, defaultMenuData) => {
-        if (initialState?.currentUser && initialState.currentUser?.menuData)
-          return listToTree(initialState?.currentUser?.menuData);
+      request: async (_,) => {
+        if (initialState?.currentUser && initialState.currentUser?.menuList)
+          return listToTree(initialState?.currentUser?.menuList);
         return [];
       },
     },

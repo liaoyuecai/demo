@@ -1,9 +1,7 @@
 package com.demo.sys.datasource;
 
 import com.demo.core.authentication.AuthenticationUser;
-import com.demo.sys.datasource.entity.SysMenu;
-import com.demo.sys.datasource.entity.SysRole;
-import com.demo.sys.datasource.entity.SysUser;
+import com.demo.sys.datasource.entity.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,10 +14,10 @@ import java.util.List;
 @Setter
 public class AuthUserCache extends AuthenticationUser {
     //识别是否root账户
-    private boolean isRoot = false;
+
     private String avatar;
-    private List<SysRole> roles;
-    private List<SysMenu> menuData;
+    private List<SysRole> roleList;
+    private List<SysMenu> menuList;
 
     public AuthUserCache(SysUser user) {
         super(user.getUsername(), user.getPassword());

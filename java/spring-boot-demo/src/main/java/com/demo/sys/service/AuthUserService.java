@@ -28,7 +28,7 @@ public class AuthUserService implements UserDetailsService {
         List<SysRole> roles = roleRepository.findRolesByUserId(userCache.getId());
         if (roles != null) {
             //todo 实际不需要这么多字段，后面修改
-            userCache.setRoles(roles);
+            userCache.setRoleList(roles);
         }
         if ("admin".equals(user.getUsername())) userCache.setRoot(true);
         return userCache;

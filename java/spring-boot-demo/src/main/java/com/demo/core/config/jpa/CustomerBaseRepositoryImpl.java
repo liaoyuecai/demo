@@ -55,6 +55,7 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
         if (customQuery.getParams() != null && !customQuery.getParams().isEmpty()) {
             for (int i = 0, l = customQuery.getParams().size(); i < l; i++)
                 query.setParameter(i + 1, customQuery.getParams().get(i));
+
         }
         return query.getResultList();
     }
@@ -76,21 +77,24 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
         if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
             StringBuilder sqlStr = new StringBuilder(criteriaQuery.getQuerySql());
             boolean where = false;
-            for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
-                if (criteriaQuery.getParams().get(i).getParameter() != null) {
+            for (QueryCriteria criteria : criteriaQuery.getParams()) {
+                if (criteria.getParameter() != null) {
                     if (!where) {
                         sqlStr.append(" where ");
                         where = true;
+                    } else {
+                        sqlStr.append(" and ");
                     }
-                    sqlStr.append(criteriaQuery.getParams().get(i).whereSql());
-                    if (i != l - 1) sqlStr.append(" and ");
+                    sqlStr.append(criteria.whereSql());
                 }
             }
             Query query = entityManager.createNativeQuery(sqlStr.toString(), clazz);
             if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
-                for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
-                    if (criteriaQuery.getParams().get(i).getParameter() != null) {
-                        query.setParameter(i + 1, criteriaQuery.getParams().get(i).getParameter());
+                int index = 1;
+                for (QueryCriteria criteria : criteriaQuery.getParams()) {
+                    if (criteria.getParameter() != null) {
+                        query.setParameter(index, criteria.getParameter());
+                        index++;
                     }
                 }
             }
@@ -142,32 +146,36 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
             StringBuilder querySqlStr = new StringBuilder(querySql);
             StringBuilder countSqlStr = new StringBuilder(countSql);
             boolean where = false;
-            for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
-                if (criteriaQuery.getParams().get(i).getParameter() != null) {
+            for (QueryCriteria criteria : criteriaQuery.getParams()) {
+                if (criteria.getParameter() != null) {
                     if (!where) {
                         querySqlStr.append(" where ");
                         countSqlStr.append(" where ");
                         where = true;
-                    }
-                    querySqlStr.append(criteriaQuery.getParams().get(i).whereSql());
-                    countSqlStr.append(criteriaQuery.getParams().get(i).whereSql());
-                    if (i != l - 1) {
+                    } else {
                         querySqlStr.append(" and ");
                         countSqlStr.append(" and ");
                     }
+                    querySqlStr.append(criteria.whereSql());
+                    countSqlStr.append(criteria.whereSql());
                 }
             }
             querySql = querySqlStr.toString();
             countSql = countSqlStr.toString();
         }
+        if (criteriaQuery.getGroupBy() != null) {
+            querySql += criteriaQuery.getGroupBy();
+        }
         querySql += getSortStr(pageable);
         Query countQuery = entityManager.createNativeQuery(countSql);
         Query listQuery = entityManager.createNativeQuery(querySql.toString(), clazz);
         if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
-            for (int i = 0, l = criteriaQuery.getParams().size(); i < l; i++) {
-                if (criteriaQuery.getParams().get(i).getParameter() != null) {
-                    countQuery.setParameter(i + 1, criteriaQuery.getParams().get(i).getParameter());
-                    listQuery.setParameter(i + 1, criteriaQuery.getParams().get(i).getParameter());
+            int index = 1;
+            for (QueryCriteria criteria : criteriaQuery.getParams()) {
+                if (criteria.getParameter() != null) {
+                    listQuery.setParameter(index, criteria.getParameter());
+                    countQuery.setParameter(index, criteria.getParameter());
+                    index++;
                 }
             }
         }

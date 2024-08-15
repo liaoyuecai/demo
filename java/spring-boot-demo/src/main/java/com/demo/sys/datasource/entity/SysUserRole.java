@@ -15,4 +15,12 @@ public class SysUserRole {
     protected Integer id;
     private Integer userId;
     private Integer roleId;
+
+    public SysUserRole() {
+    }
+
+    public SysUserRole(Integer userId, Integer roleId) {
+        this.userId = userId;
+        this.roleId = roleId;
+    }
 }

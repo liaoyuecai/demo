@@ -1,16 +1,20 @@
 package com.demo.core.service;
 
+import com.demo.core.aop.RequestBaseEntitySet;
 import com.demo.core.config.jpa.CustomerBaseRepository;
+import com.demo.core.dto.ApiHttpRequest;
+import com.demo.core.dto.DeleteRequest;
 import com.demo.core.dto.PageList;
 import com.demo.core.dto.PageListRequest;
+import com.demo.core.entity.TableBaseEntity;
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 默认实现CURDService
@@ -25,28 +29,52 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
         this.repository = repository;
     }
 
-    public T save(T entity) {
-        return repository.save(entity);
+    public T save(ApiHttpRequest<T> request) {
+        if (!request.getUser().isRoot()) {
+            T entity = request.getData();
+            RequestBaseEntitySet entitySet = request.getEntitySet();
+            if (entity instanceof TableBaseEntity &&
+                    ((TableBaseEntity) entity).getId() != null &&
+                    entitySet != null && entitySet.checkCreateBy()) {
+                TableBaseEntity baseEntity = (TableBaseEntity) entity;
+                Optional<T> optional = repository.findById(baseEntity.getId());
+                if (optional.isPresent() &&
+                        !((TableBaseEntity) optional.get()).getCreateBy().equals(
+                                request.getUser().getId())) {
+                    throw new GlobalException(ErrorCode.ACCESS_DATA_UPDATE_ERROR);
+                }
+            }
+        }
+        return repository.save(request.getData());
     }
 
 
-    public void delete(Integer id) {
-        repository.deleteById(id);
+    public void delete(ApiHttpRequest<Integer> request) {
+        if (!request.getUser().isRoot())
+            checkDelete(request);
+        repository.deleteById(request.getData());
     }
 
 
-    public void deleteAll(Collection<Integer> ids) {
-        repository.deleteByIds(ids);
+    public void deleteAll(DeleteRequest request) {
+        if (!request.getUser().isRoot())
+            checkDeleteAll(request);
+        repository.deleteByIds(request.getData());
     }
 
 
-    public void deleteUpdate(Integer id) {
-        repository.deleteUpdateByIds(List.of(id));
+    public void deleteUpdate(ApiHttpRequest<Integer> request) {
+        if (!request.getUser().isRoot())
+            checkDelete(request);
+        repository.deleteUpdateByIds(List.of(request.getData()));
     }
 
 
-    public void deleteUpdate(Collection<Integer> ids) {
+    public void deleteUpdate(DeleteRequest request) {
+        List<Integer> ids = request.getData();
         if (ids == null || ids.isEmpty()) throw new GlobalException(ErrorCode.PARAMS_ERROR_REQUEST_DATA_NOT_FOUND);
+        if (!request.getUser().isRoot())
+            checkDeleteAll(request);
         repository.deleteUpdateByIds(ids);
     }
 
@@ -54,7 +82,6 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
     public List<T> findList(Example<T> example) {
         return repository.findAll(example);
     }
-
 
 
     public List<T> findNotDeletedAndStatus() {
@@ -127,7 +154,7 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
      * @param <K>
      * @return
      */
-    public <K> PageList<K> findPageCustomCriteria(PageListRequest<T> request, Class<K> clazz) {
+    public <K, R> PageList<K> findPageCustomCriteria(PageListRequest<R> request, Class<K> clazz) {
         Page<K> page = repository.customQuery(request.getCustomCriteriaQuery(), clazz, request.toPageable());
         PageList<K> pageList = new PageList<>(request);
         pageList.setTotal(page.getTotalElements());
@@ -135,4 +162,37 @@ public abstract class CURDService<T, R extends CustomerBaseRepository<T>> {
         return pageList;
     }
 
+    void checkDelete(ApiHttpRequest<Integer> request) {
+        RequestBaseEntitySet entitySet = request.getEntitySet();
+        if (entitySet != null && entitySet.checkCreateBy()) {
+            checkCreateId(request.getData(), request.getUser().getId());
+        }
+    }
+
+    void checkDeleteAll(DeleteRequest request) {
+        RequestBaseEntitySet entitySet = request.getEntitySet();
+        if (entitySet != null && entitySet.checkCreateBy()) {
+            checkCreateId(request.getData(), request.getUser().getId());
+        }
+    }
+
+    protected void checkCreateId(Integer id, Integer userId) {
+        Optional<T> optional = repository.findById(id);
+        if (optional.isPresent() && optional.get() instanceof TableBaseEntity) {
+            TableBaseEntity entity = (TableBaseEntity) optional.get();
+            if (!entity.getCreateBy().equals(userId))
+                throw new GlobalException(ErrorCode.ACCESS_DATA_UPDATE_ERROR);
+        }
+    }
+
+    protected void checkCreateId(List<Integer> ids, Integer userId) {
+        List<T> list = repository.findAllById(ids);
+        for (T t : list) {
+            if (t instanceof TableBaseEntity) {
+                TableBaseEntity entity = (TableBaseEntity) t;
+                if (!entity.getCreateBy().equals(userId))
+                    throw new GlobalException(ErrorCode.ACCESS_DATA_UPDATE_ERROR);
+            }
+        }
+    }
 }

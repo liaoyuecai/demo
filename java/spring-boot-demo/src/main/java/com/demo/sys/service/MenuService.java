@@ -18,19 +18,14 @@ public class MenuService extends CURDService<SysMenu, SysMenuRepository> {
         super(repository);
     }
 
-    @Override
-    public void deleteUpdate(Integer id) {
-        //todo 后期要验证角色关联
-        super.deleteUpdate(id);
-    }
 
 
     public List<SysMenu> findOwnList(AuthUserCache userCache) {
         if (userCache.isRoot())
             return repository.findByRoot();
-        if (userCache.getRoles() != null && !userCache.getRoles().isEmpty()) {
-            return repository.findByRoleKeys(
-                    userCache.getRoles().stream().map(SysRole::getRoleKey).toList());
+        if (userCache.getRoleList() != null && !userCache.getRoleList().isEmpty()) {
+            return repository.findByRoleId(
+                    userCache.getRoleList().stream().map(SysRole::getId).toList());
         }
         return List.of();
     }

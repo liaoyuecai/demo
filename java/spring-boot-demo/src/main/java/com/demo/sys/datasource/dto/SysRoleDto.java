@@ -13,6 +13,7 @@ public class SysRoleDto {
     @Id
     private Integer id;
     private String roleName;
+    private Integer roleType;
     private String description;
     private Integer status;
     private String roleKey;
