@@ -226,8 +226,9 @@ const RolePage: React.FC = () => {
           </Popconfirm>
         ]}
         columns={columns}
+        rowKey={'id'}
         rowSelection={{
-          onChange: (selectedRowKeys) => {
+          onChange: (selectedRowKeys,e) => {
             setSelectedRowKeys(selectedRowKeys);
           },
         }}

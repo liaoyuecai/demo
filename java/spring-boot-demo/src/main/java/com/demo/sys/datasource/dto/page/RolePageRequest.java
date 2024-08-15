@@ -5,6 +5,7 @@ import com.demo.core.config.jpa.QueryCriteria;
 import com.demo.core.dto.PageListRequest;
 import com.demo.sys.datasource.entity.SysRole;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RolePageRequest extends PageListRequest<SysRole> {
@@ -19,20 +20,20 @@ public class RolePageRequest extends PageListRequest<SysRole> {
                 """;
         String countSql = "SELECT COUNT(1) FROM sys_role r ";
         String groupBy = " GROUP BY r.id";
-        List<QueryCriteria> params = List.of(
+        List<QueryCriteria> params = new ArrayList<>(List.of(
                 new QueryCriteria("r.deleted", QueryCriteria.Expression.EQUALS, 0),
                 new QueryCriteria("r.roleName", QueryCriteria.Expression.CONTAINS, this.data.getRoleName()),
                 new QueryCriteria("r.roleKey", QueryCriteria.Expression.CONTAINS, this.data.getRoleKey())
-        );
+        ));
         if (!this.user.isRoot()) {
             //非超管用户只显示自己创建和公用角色
-            params.add(new QueryCriteria("", QueryCriteria.Expression.OR, List.of(
+            params.add(new QueryCriteria(QueryCriteria.Expression.OR,
                     new QueryCriteria("r.role_type", QueryCriteria.Expression.EQUALS, 1),
-                    new QueryCriteria("", QueryCriteria.Expression.AND, List.of(
+                    new QueryCriteria(QueryCriteria.Expression.AND,
                             new QueryCriteria("r.role_type", QueryCriteria.Expression.EQUALS, 2),
                             new QueryCriteria("r.create_by", QueryCriteria.Expression.EQUALS, this.user.getId())
-                    ))
-            )));
+                    )
+            ));
         }
         return new CustomCriteriaQuery(querySql, countSql, groupBy, params);
     }

@@ -1,5 +1,7 @@
 package com.demo.sys.controller;
 
+import com.demo.core.aop.RequestBaseEntitySet;
+import com.demo.core.aop.RequestSetType;
 import com.demo.core.dto.*;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dto.SysUserDto;
@@ -24,6 +26,7 @@ public class UserController {
 
 
     @PostMapping("/save")
+    @RequestBaseEntitySet(checkCreateBy = true)
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysUser> request) {
         service.save(request);
         return request.success();
@@ -45,6 +48,7 @@ public class UserController {
     }
 
     @PostMapping("/delete")
+    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
         service.deleteUpdate(request);
         return request.success();

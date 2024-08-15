@@ -1,5 +1,6 @@
 package com.demo.core.config.jpa;
 
+import jakarta.persistence.Query;
 import lombok.Getter;
 
 import java.util.List;
@@ -21,6 +22,11 @@ public class QueryCriteria {
         this.columnName = columnName;
         this.expression = expression;
         this.parameter = parameter;
+    }
+
+    public QueryCriteria(Expression expression, QueryCriteria... parameters) {
+        this.expression = expression;
+        this.parameter = List.of(parameters);
     }
 
     /**
@@ -50,7 +56,7 @@ public class QueryCriteria {
         // <=
         LESS_THAN_EQUALS,
         IN,
-        AND,OR;
+        AND, OR;
     }
 
     /**
@@ -64,7 +70,9 @@ public class QueryCriteria {
      * @return
      */
     public String whereSql() {
-        StringBuilder sqlStr = new StringBuilder(this.columnName);
+        StringBuilder sqlStr = new StringBuilder();
+        if (this.columnName != null)
+            sqlStr.append(columnName);
         switch (this.expression) {
             case EQUALS -> sqlStr.append(" = ? ");
             case IS_NULL -> sqlStr.append(" is null ");
@@ -87,38 +95,66 @@ public class QueryCriteria {
             case LESS_THAN -> sqlStr.append(" < ? ");
             case LESS_THAN_EQUALS -> sqlStr.append(" <= ? ");
             case IN -> sqlStr.append(" in (?) ");
-            case OR ->{
-                List<QueryCriteria> params = (List<QueryCriteria>)this.parameter;
-                sqlStr.append(" ( ");
-                if (params!=null && params.size()>1){
+            case OR -> {
+                List<QueryCriteria> params = (List<QueryCriteria>) this.parameter;
+                if (params != null && params.size() > 1) {
                     boolean flag = false;
-                    for(QueryCriteria criteria:params){
-                        sqlStr.append(criteria.whereSql());
-                        if (!flag){
-                            sqlStr.append(" or ");
-                            flag = true;
+                    for (QueryCriteria criteria : params) {
+                        if (criteria.parameter != null) {
+                            sqlStr.append(criteria.whereSql());
+                            if (!flag) {
+                                sqlStr.append(" or ");
+                                flag = true;
+                            }
                         }
                     }
                 }
-                sqlStr.append(" ) ");
+                if (sqlStr.isEmpty())
+                    return "";
+                return " ( " + sqlStr + " ) ";
             }
-            case AND ->{
-                List<QueryCriteria> params = (List<QueryCriteria>)this.parameter;
-                sqlStr.append(" ( ");
-                if (params!=null && params.size()>1){
+            case AND -> {
+                List<QueryCriteria> params = (List<QueryCriteria>) this.parameter;
+                if (params != null && params.size() > 1) {
                     boolean flag = false;
-                    for(QueryCriteria criteria:params){
-                        sqlStr.append(criteria.whereSql());
-                        if (!flag){
-                            sqlStr.append(" and ");
-                            flag = true;
+                    for (QueryCriteria criteria : params) {
+                        if (criteria.parameter != null) {
+                            sqlStr.append(criteria.whereSql());
+                            if (!flag) {
+                                sqlStr.append(" and ");
+                                flag = true;
+                            }
                         }
                     }
                 }
-                sqlStr.append(" ) ");
+                if (sqlStr.isEmpty())
+                    return "";
+                return " ( " + sqlStr + " ) ";
             }
         }
         return sqlStr.toString();
+    }
+
+    public int setQueryParameter(Query query, int index) {
+        switch (this.expression) {
+            case OR, AND -> {
+                List<QueryCriteria> params = (List<QueryCriteria>) this.parameter;
+                int i = index;
+                if (params != null && params.size() > 1) {
+                    for (QueryCriteria criteria : params) {
+                        i = criteria.setQueryParameter(query, i);
+                    }
+                }
+                return i;
+            }
+            default -> {
+                if (parameter != null) {
+                    query.setParameter(index, this.parameter);
+                    return index + 1;
+                }
+                return index;
+            }
+        }
     }
 
 }

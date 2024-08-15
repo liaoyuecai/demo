@@ -1,6 +1,7 @@
 package com.demo.sys.controller;
 
 import com.demo.core.aop.RequestBaseEntitySet;
+import com.demo.core.aop.RequestSetType;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
 import com.demo.core.dto.DeleteRequest;
@@ -23,7 +24,7 @@ public class JobController {
 
 
     @PostMapping("/save")
-    @RequestBaseEntitySet
+    @RequestBaseEntitySet(checkCreateBy = true)
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysJob> request) {
         jobService.save(request);
         return request.success();
@@ -38,7 +39,7 @@ public class JobController {
 
 
     @PostMapping("/delete")
-    @RequestBaseEntitySet
+    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
         jobService.deleteUpdate(request);
         return request.success();

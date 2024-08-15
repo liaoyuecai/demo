@@ -213,6 +213,7 @@ const Page: React.FC = () => {
           </Popconfirm>
         ]}
         columns={columns}
+        rowKey={'id'}
         rowSelection={{
           onChange: (selectedRowKeys) => {
             setSelectedRowKeys(selectedRowKeys);

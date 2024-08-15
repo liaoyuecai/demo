@@ -3,7 +3,6 @@ package com.demo.core.authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -13,7 +12,7 @@ import java.util.stream.IntStream;
 /**
  * 默认创建一个用户，一般没啥用
  */
-public class UserServiceDefaultImpl implements UserDetailsService {
+public class UserServiceDefaultImpl implements UserDatasourceService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceDefaultImpl.class);
     private final AuthenticationUser user;
 

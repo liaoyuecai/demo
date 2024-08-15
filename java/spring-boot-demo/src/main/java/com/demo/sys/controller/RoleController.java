@@ -1,6 +1,7 @@
 package com.demo.sys.controller;
 
 import com.demo.core.aop.RequestBaseEntitySet;
+import com.demo.core.aop.RequestSetType;
 import com.demo.core.authentication.WebSecurityConfig;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
@@ -25,7 +26,7 @@ public class RoleController {
 
 
     @PostMapping("/save")
-    @RequestBaseEntitySet
+    @RequestBaseEntitySet(checkCreateBy = true)
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysRole> request) {
         service.save(request);
         return request.success();
@@ -37,7 +38,7 @@ public class RoleController {
     }
 
     @PostMapping("/delete")
-    @RequestBaseEntitySet
+    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
         service.deleteUpdate(request);
         return request.success();

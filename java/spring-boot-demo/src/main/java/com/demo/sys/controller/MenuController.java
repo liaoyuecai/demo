@@ -1,6 +1,7 @@
 package com.demo.sys.controller;
 
 import com.demo.core.aop.RequestBaseEntitySet;
+import com.demo.core.aop.RequestSetType;
 import com.demo.core.authentication.WebSecurityConfig;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
@@ -22,7 +23,7 @@ public class MenuController {
 
 
     @PostMapping("/save")
-    @RequestBaseEntitySet
+    @RequestBaseEntitySet(checkCreateBy = true)
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysMenu> request) {
         menuService.save(request);
         return request.success();
@@ -40,7 +41,7 @@ public class MenuController {
     }
 
     @PostMapping("/delete")
-    @RequestBaseEntitySet
+    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
         menuService.deleteUpdate(request);
         return request.success();

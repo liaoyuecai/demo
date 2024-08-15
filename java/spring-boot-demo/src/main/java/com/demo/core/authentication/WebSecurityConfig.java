@@ -9,7 +9,6 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -32,7 +31,7 @@ public class WebSecurityConfig {
     @Autowired(required = false)
     TokenManager tokenManager;
     @Autowired(required = false)
-    UserDetailsService detailsService;
+    UserDatasourceService userDatasourceService;
     @Autowired(required = false)
     PasswordAuthProvider authProvider;
     @Autowired(required = false)
@@ -54,9 +53,9 @@ public class WebSecurityConfig {
     public void beanCheckAndInit() {
         if (tokenManager == null) tokenManager = new GoogleCacheTokenManager();
         if (passwordEncoder == null) passwordEncoder = new BCryptPasswordEncoder();
-        if (detailsService == null) detailsService = new UserServiceDefaultImpl(passwordEncoder);
+        if (userDatasourceService == null) userDatasourceService = new UserServiceDefaultImpl(passwordEncoder);
         if (authProvider == null)
-            authProvider = new PasswordAuthProvider(detailsService, passwordEncoder, tokenManager);
+            authProvider = new PasswordAuthProvider(userDatasourceService, passwordEncoder, tokenManager);
         if (resultHandler == null) {
             resultHandler = new AuthenticationResultHandler();
             resultHandler.setTokenManager(tokenManager);

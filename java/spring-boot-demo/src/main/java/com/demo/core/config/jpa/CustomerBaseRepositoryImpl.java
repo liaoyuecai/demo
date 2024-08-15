@@ -92,10 +92,7 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
             if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
                 int index = 1;
                 for (QueryCriteria criteria : criteriaQuery.getParams()) {
-                    if (criteria.getParameter() != null) {
-                        query.setParameter(index, criteria.getParameter());
-                        index++;
-                    }
+                    index = criteria.setQueryParameter(query,index);
                 }
             }
             return query.getResultList();
@@ -172,11 +169,9 @@ public class CustomerBaseRepositoryImpl<T> extends SimpleJpaRepository<T, Intege
         if (criteriaQuery.getParams() != null && !criteriaQuery.getParams().isEmpty()) {
             int index = 1;
             for (QueryCriteria criteria : criteriaQuery.getParams()) {
-                if (criteria.getParameter() != null) {
-                    listQuery.setParameter(index, criteria.getParameter());
-                    countQuery.setParameter(index, criteria.getParameter());
-                    index++;
-                }
+                int lineIndex = criteria.setQueryParameter(listQuery,index);
+                criteria.setQueryParameter(countQuery,index);
+                index = lineIndex;
             }
         }
         listQuery.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
