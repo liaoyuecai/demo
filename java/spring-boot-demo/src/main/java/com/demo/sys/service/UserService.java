@@ -6,6 +6,7 @@ import com.demo.core.dto.WebTreeNode;
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
 import com.demo.core.service.CURDService;
+import com.demo.core.utils.StringUtils;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dao.*;
 import com.demo.sys.datasource.dto.ResetPassword;
@@ -47,6 +48,8 @@ public class UserService extends CURDService<SysUser, SysUserRepository> {
     private String defaultPassword;
     @Value("${user.default.avatar:''}")
     private String defaultAvatar;
+    @Value("${user.root.username:'root'}")
+    private String rootAccount;
 
     public UserService(@Autowired SysUserRepository repository) {
         super(repository);
@@ -77,6 +80,9 @@ public class UserService extends CURDService<SysUser, SysUserRepository> {
     public SysUser save(ApiHttpRequest<SysUser> request) {
         SysUser entity = request.getData();
         if (entity == null) return null;
+        //禁止对超管账户进行修改
+        if (rootAccount.equals(entity.getUsername()))
+            throw new GlobalException(ErrorCode.ACCESS_DATA_UPDATE_ERROR);
         if (entity.getId() == null) {
             SysUser user = repository.findByUsernameAndDeleted(entity.getUsername(), 0);
             if (user != null) {
@@ -119,7 +125,7 @@ public class UserService extends CURDService<SysUser, SysUserRepository> {
             node.setTitle(job.getJobName());
             node.setValue(job.getId());
             node.setLeaf(true);
-            nodeMap.get(job.getDeptId()).addChild(node);
+            nodeMap.get(job.getDeptId()).addChild(0, node);
         });
         return rootList;
     }
@@ -233,6 +239,9 @@ public class UserService extends CURDService<SysUser, SysUserRepository> {
         SysUser user = optional.get();
         if (!passwordEncoder.matches(data.getOldPassword(), user.getPassword())) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR_OLD_PWD);
+        }
+        if (!StringUtils.checkPassword(data.getNewPassword())) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR_PASSWORD_LOW);
         }
         user.setPassword(passwordEncoder.encode(data.getNewPassword()));
         user.setUpdateBy(user.getId());

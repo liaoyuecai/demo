@@ -20,6 +20,7 @@ public class AuthenticationUser implements UserDetails {
     protected Integer id;
     protected String username;
     protected String password;
+    protected String verificationCode;
     protected boolean isRoot = false;
     private String token;
 

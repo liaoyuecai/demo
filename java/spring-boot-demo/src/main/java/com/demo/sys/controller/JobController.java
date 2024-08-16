@@ -39,7 +39,7 @@ public class JobController {
 
 
     @PostMapping("/delete")
-    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
+    @RequestBaseEntitySet(checkCreateBy = true, type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
         jobService.deleteUpdate(request);
         return request.success();

@@ -17,10 +17,16 @@ public class WebTreeNode {
     protected boolean disabled = false;
     protected List<WebTreeNode> children;
 
-    public void addChild(WebTreeNode node){
-        if (children==null)
+    public void addChild(WebTreeNode node) {
+        if (children == null)
             children = new ArrayList<>();
         children.add(node);
+    }
+
+    public void addChild(int index, WebTreeNode node) {
+        if (children == null)
+            children = new ArrayList<>();
+        children.add(index, node);
     }
 
 }

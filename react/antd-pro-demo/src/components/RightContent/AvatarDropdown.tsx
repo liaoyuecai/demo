@@ -158,7 +158,7 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
         }}
       >
         <Form form={restPwdForm} onFinish={(val: any) => {
-          const res = post('/auth/resetPassword', { data: val });
+          const res = post('/user/resetPassword', { data: val });
           res.then((re) => {
             if (re.code === 0) {
               confirm({

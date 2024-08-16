@@ -106,7 +106,7 @@ export async function removeRule(options?: { [key: string]: any }) {
  * @returns 
  */
 export async function post<T>(url: string, params?: {}, options?: { [key: string]: any }) {
-  return request<API.Response<T>>(process.env.baseUrl + url, {
+  return request<API.Response<T>>('/api' + url, {
     method: 'POST',
     data: {
       traceId: new Date().getTime(),

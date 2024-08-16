@@ -1,7 +1,8 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
 import { message, notification } from 'antd';
-
+import { history } from '@umijs/max';
+import { stringify } from 'querystring';
 // 错误处理方案： 错误类型
 enum ErrorShowType {
   SILENT = 0,
@@ -83,9 +84,25 @@ export const errorConfig: RequestConfig = {
     (response) => {
       // 拦截响应数据，进行个性化处理
       const { data } = response as unknown as ResponseStructure;
-
       if (data?.code !== 0) {
-        message.error(data.errorMsg)
+        if (data?.code === 3002) {
+          message.error('登录信息超时，请重新登录')
+          const { search, pathname } = window.location;
+          const urlParams = new URL(window.location.href).searchParams;
+          /** 此方法会跳转到 redirect 参数所在的位置 */
+          const redirect = urlParams.get('redirect');
+          // Note: There may be security issues, please note
+          if (window.location.pathname !== '/user/login' && !redirect) {
+            history.replace({
+              pathname: '/user/login',
+              search: stringify({
+                redirect: pathname + search,
+              }),
+            });
+          }
+        } else {
+          message.error(data.errorMsg)
+        }
       }
       return response;
     },

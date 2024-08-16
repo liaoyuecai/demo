@@ -1,28 +1,41 @@
 package com.demo.sys.service;
 
 import com.demo.core.authentication.UserDatasourceService;
+import com.demo.core.exception.ErrorCode;
+import com.demo.core.exception.GlobalException;
+import com.demo.core.utils.StringUtils;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dao.SysRoleRepository;
 import com.demo.sys.datasource.dao.SysUserRepository;
+import com.demo.sys.datasource.dto.ResetRootPassword;
 import com.demo.sys.datasource.entity.SysUser;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthUserService implements UserDatasourceService {
+
     @Resource
     SysUserRepository userRepository;
     @Resource
     SysRoleRepository roleRepository;
+    @Resource
+    private PasswordEncoder passwordEncoder;
+    @Value("${user.root.username:'root'}")
+    private String rootAccount;
+    @Value("${user.root.resetCode}")
+    private String rootResetCode;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         SysUser user = userRepository.findByUsernameAndStatusAndDeleted(username, 1, 0);
         if (user == null) return null;
         AuthUserCache userCache = new AuthUserCache(user);
-        if ("admin".equals(user.getUsername())) userCache.setRoot(true);
+        if (rootAccount.equals(user.getUsername())) userCache.setRoot(true);
         return userCache;
     }
 
@@ -34,5 +47,20 @@ public class AuthUserService implements UserDatasourceService {
             userCache.setRoleList(roleRepository.findNotDeletedAndStatus());
         else
             userCache.setRoleList(roleRepository.findRolesByUserId(userCache.getId()));
+    }
+
+
+    public void resetRootPassword(ResetRootPassword data) {
+        if (rootResetCode.equals(data.getCode())) {
+            if (!StringUtils.checkPassword(data.getPassword())) {
+                throw new GlobalException(ErrorCode.PARAMS_ERROR_PASSWORD_LOW);
+            }
+            SysUser user = userRepository.findByUsernameAndDeleted(rootAccount, 0);
+            user.setPassword(passwordEncoder.encode(data.getPassword()));
+            userRepository.save(user);
+        } else {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR_RESET_CODE_REPEAT);
+
+        }
     }
 }

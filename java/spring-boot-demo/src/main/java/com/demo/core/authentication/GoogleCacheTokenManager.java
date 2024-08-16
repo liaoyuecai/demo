@@ -18,11 +18,15 @@ import java.util.concurrent.TimeUnit;
 public class GoogleCacheTokenManager implements TokenManager {
 
     // 创建一个 缓存，并定义缓存超时策略为 最后一次访问后超过15分钟后过期
-    private static final Cache<String, Authentication> TokenCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(15, TimeUnit.MINUTES)
-            .expireAfterAccess(15, TimeUnit.MINUTES)
-            .removalListener((RemovalListener<String, Authentication>) notification -> log.info("remove cause{}:{}", notification.getKey(), notification.getCause()))
-            .build();
+    private final Cache<String, Authentication> TokenCache;
+
+    public GoogleCacheTokenManager(int timeout) {
+        this.TokenCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(timeout, TimeUnit.MINUTES)
+                .expireAfterAccess(timeout, TimeUnit.MINUTES)
+                .removalListener((RemovalListener<String, Authentication>) notification -> log.info("remove cause{}:{}", notification.getKey(), notification.getCause()))
+                .build();
+    }
 
     @Override
     public String generateToken(Authentication authentication) {

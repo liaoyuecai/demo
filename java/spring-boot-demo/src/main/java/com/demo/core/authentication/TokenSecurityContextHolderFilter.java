@@ -1,17 +1,18 @@
 package com.demo.core.authentication;
 
+import com.google.code.kaptcha.Producer;
 import io.micrometer.common.util.StringUtils;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 /**
@@ -21,17 +22,45 @@ import java.io.IOException;
 @Setter
 public class TokenSecurityContextHolderFilter extends GenericFilterBean {
 
-    private TokenManager tokenManager;
+    private final TokenManager tokenManager;
+    private final String captchaUrl;
+    private final Producer captchaProducer;
 
-    public TokenSecurityContextHolderFilter(TokenManager tokenManager) {
+    public TokenSecurityContextHolderFilter(TokenManager tokenManager, String captchaUrl, Producer captchaProducer) {
         this.tokenManager = tokenManager;
+        this.captchaUrl = captchaUrl;
+        this.captchaProducer = captchaProducer;
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-
+        String uri = ((HttpServletRequest) request).getRequestURI();
+        //验证码请求
+        if (uri.startsWith(captchaUrl) && !uri.replaceAll(captchaUrl, "").contains("/")) {
+            // 生成验证码文本并存储到session
+            String capText = captchaProducer.createText();
+            httpRequest.getSession().setAttribute(WebSecurityConfig.VERIFICATION_CODE_SESSION_KEY, capText.toLowerCase());
+            HttpServletResponse httpResponse = (HttpServletResponse) response;
+            // 设定返回给客户端的内容类型
+            httpResponse.setContentType("image/jpg");
+            // 禁止浏览器缓存此图片
+            httpResponse.setHeader("Pragma", "No-cache");
+            httpResponse.setHeader("Cache-Control", "no-cache");
+            httpResponse.setDateHeader("Expires", 0);
+            // 将验证码图片写入到response的输出流中
+            ServletOutputStream out = httpResponse.getOutputStream();
+            // 生成图片验证码
+            BufferedImage image = captchaProducer.createImage(capText);
+            ImageIO.write(image, "jpg", out);
+            try {
+                out.flush();
+            } finally {
+                out.close();
+            }
+            return;
+        }
         // 从请求头中获取Token
         String reqToken = httpRequest.getHeader(WebSecurityConfig.HTTP_HEADER_AUTHORIZATION);
 

@@ -33,12 +33,12 @@ export async function getInitialState(): Promise<{
 }> {
   const fetchUserInfo = async () => {
     try {
-      const msg = await post<UserCache>('/auth/current', {})
+      const msg = await post<UserCache>('/user/current', {})
       if (msg.data) {
         return {
           name: msg.data.username,
           token: msg.data.token,
-          avatar: process.env.baseUrl + msg.data.avatar,
+          avatar: msg.data.avatar,
           menuList: msg.data?.menuList,
         };
       }
@@ -111,9 +111,10 @@ function listToTree(menus: API.MenuData[]): MenuDataItem[] {
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    actionsRender: () => [<Question key="doc" />, <SelectLang key="SelectLang" />],
+    //暂时不需要文档及语言切换
+    // actionsRender: () => [<Question key="doc" />, <SelectLang key="SelectLang" />],
     avatarProps: {
-      src: initialState?.currentUser?.avatar,
+      src: '/api' + initialState?.currentUser?.avatar,
       title: <AvatarName />,
       render: (_, avatarChildren) => {
         return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;

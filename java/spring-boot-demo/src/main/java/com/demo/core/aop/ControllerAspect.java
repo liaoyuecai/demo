@@ -70,19 +70,22 @@ public class ControllerAspect {
     void params(Object[] args, ProceedingJoinPoint joinPoint) {
         Class<?> targetCls = joinPoint.getTarget().getClass();
         MethodSignature ms = (MethodSignature) joinPoint.getSignature();
-        AuthenticationUser user = getUser();
+        AuthenticationUser user = null;
         ApiHttpRequest request = null;
         try {
             for (Object arg : args) {
                 if (arg instanceof ApiHttpRequest) {
                     request = (ApiHttpRequest) arg;
+                    if (user == null) user = getUser();
                     request.setUser(user);
-                    if (arg instanceof PageListRequest && ((PageListRequest<?>) arg).getData() instanceof TableBaseEntity){
+                    if (arg instanceof PageListRequest && ((PageListRequest<?>) arg).getData() instanceof TableBaseEntity) {
                         ((TableBaseEntity) ((PageListRequest<?>) arg).getData()).setDeleted(0);
                     }
                     break;
                 }
             }
+            if (request == null)
+                return;
             Method targetMethod =
                     targetCls.getDeclaredMethod(
                             ms.getName(),
@@ -137,6 +140,7 @@ public class ControllerAspect {
 
     /**
      * 获取当前用户
+     *
      * @return
      */
     AuthenticationUser getUser() {

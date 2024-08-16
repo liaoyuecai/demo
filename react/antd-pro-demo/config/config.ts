@@ -14,14 +14,7 @@ export default defineConfig({
    * @doc https://umijs.org/docs/api/config#hash
    */
   hash: true,
-  /**
-   * 配置一个全局变量，用于指定后端访问地址
-   */
-  define: {
-    "process.env": {
-      baseUrl: 'http://127.0.0.1:8081'
-    }
-  },
+
   /**
    * @name 兼容性设置
    * @description 设置 ie11 不一定完美兼容，需要检查自己使用的所有依赖

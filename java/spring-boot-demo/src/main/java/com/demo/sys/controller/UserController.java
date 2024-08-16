@@ -2,8 +2,10 @@ package com.demo.sys.controller;
 
 import com.demo.core.aop.RequestBaseEntitySet;
 import com.demo.core.aop.RequestSetType;
+import com.demo.core.authentication.WebSecurityConfig;
 import com.demo.core.dto.*;
 import com.demo.sys.datasource.AuthUserCache;
+import com.demo.sys.datasource.dto.ResetPassword;
 import com.demo.sys.datasource.dto.SysUserDto;
 import com.demo.sys.datasource.dto.UserBindJobAndRole;
 import com.demo.sys.datasource.dto.page.UserPageRequest;
@@ -11,10 +13,9 @@ import com.demo.sys.datasource.entity.SysRole;
 import com.demo.sys.datasource.entity.SysUser;
 import com.demo.sys.service.UserService;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -65,5 +66,14 @@ public class UserController {
         return request.success(service.findBindJobAndRole(request.getData()));
     }
 
+    @PostMapping("/current")
+    public ApiHttpResponse<AuthUserCache> current(@RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_AUTHENTICATION) Authentication authentication) {
+        return ApiHttpResponse.success(service.currentUser(authentication));
+    }
 
+    @PostMapping("/resetPassword")
+    public ApiHttpResponse<AuthUserCache> resetPassword(@RequestBody ApiHttpRequest<ResetPassword> request, @RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_USER_DETAILS) AuthUserCache userDetails) {
+        service.resetPassword(request.getData(), userDetails);
+        return ApiHttpResponse.success(SecurityContextHolder.getContext().getAuthentication().getDetails());
+    }
 }

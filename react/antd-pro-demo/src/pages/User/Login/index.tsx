@@ -16,7 +16,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { FormattedMessage, history, SelectLang, useIntl, useModel, Helmet } from '@umijs/max';
-import { Alert, message, Tabs } from 'antd';
+import { Alert, Form, Input, message, Modal, Tabs } from 'antd';
 import Settings from '../../../../config/defaultSettings';
 import React, { useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -98,10 +98,12 @@ const LoginMessage: React.FC<{
 const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
   const [type, setType] = useState<string>('account');
+  const [restModalOPen, setRestModalOPen] = useState<boolean>(false);
   const { initialState, setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
   const intl = useIntl();
-
+  const [captchaTimestamp, setCaptchaTimestamp] = useState(new Date().getTime());
+  const captchaBaseUrl = 'http://127.0.0.1:8081/auth/captcha';
   const fetchUserInfo = async () => {
     const userInfo = await initialState?.fetchUserInfo?.();
     if (userInfo) {
@@ -117,6 +119,12 @@ const Login: React.FC = () => {
   type LoginUser = {
     token: string
   }
+
+  const refreshCaptcha = () => {
+    setCaptchaTimestamp(new Date().getTime());
+  };
+
+  const captchaUrl = `${captchaBaseUrl}?timestamp=${captchaTimestamp}`;
 
   const handleSubmit = async (values: API.LoginParams) => {
     try {
@@ -134,7 +142,7 @@ const Login: React.FC = () => {
         history.push(urlParams.get('redirect') || '/');
         return;
       }
-
+      refreshCaptcha();
       // 如果失败去设置用户错误信息
       setUserLoginState({ status: 'error', type: '用户名密码错误' });
     } catch (error) {
@@ -147,9 +155,60 @@ const Login: React.FC = () => {
     }
   };
   const { status, type: loginType } = userLoginState;
-
+  const [form] = Form.useForm();
   return (
     <div className={styles.container}>
+      <Modal title={'重置超管账户密码'} open={restModalOPen} onOk={() => {form.submit(); }}
+        onCancel={() => {
+          setRestModalOPen(false)
+          form.resetFields();
+        }}
+      >
+        <Form form={form} onFinish={(val: any) => {
+          const res = post('/auth/resetRootPassword', val);
+          res.then((re) => {
+            if (re.code === 0) {
+              message.info("重置成功，请重新登录！")
+              setRestModalOPen(false);
+              form.resetFields();
+            }
+          });
+        }}>
+          <Form.Item
+            name={'code'}
+            label={'重置码'}
+            rules={[{ required: true }]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name={'password'}
+            label={'新密码'}
+            rules={[{ required: true },
+            { pattern: new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^_()&*-]).{8,}$'), message: '密码中必须包含数字、大小写字母和特殊符号，且长度不能小于8位' },
+            ]}
+
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name={'passwordAgain'}
+            label={'重复密码'}
+            rules={[{ required: true, message: '重复密码不能为空', },
+            ({ getFieldValue }) => ({
+              validator(role, value) {
+                if (value !== getFieldValue('password')) {
+                  return Promise.reject('两次密码不一致');
+                }
+                return Promise.resolve();
+              }
+            })
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+        </Form>
+      </Modal>
       <Helmet>
         <title>
           {intl.formatMessage({
@@ -177,14 +236,7 @@ const Login: React.FC = () => {
           initialValues={{
             autoLogin: true,
           }}
-          actions={[
-            <FormattedMessage
-              key="loginWith"
-              id="pages.login.loginWith"
-              defaultMessage="其他登录方式"
-            />,
-            <ActionIcons key="icons" />,
-          ]}
+
           onFinish={async (values) => {
             await handleSubmit(values as API.LoginParams);
           }}
@@ -264,6 +316,15 @@ const Login: React.FC = () => {
                     ),
                   },
                 ]}
+              />
+              <ProFormText
+                name="verificationCode"
+                fieldProps={{
+                  size: 'large',
+                  prefix: <img src={captchaUrl} onClick={refreshCaptcha} style={{ cursor: 'pointer', height: 28, marginRight: 20 }} />,
+                }}
+                placeholder='验证码'
+
               />
             </>
           )}
@@ -362,6 +423,7 @@ const Login: React.FC = () => {
               style={{
                 float: 'right',
               }}
+              onClick={()=>{setRestModalOPen(true)}}
             >
               <FormattedMessage id="pages.login.forgotPassword" defaultMessage="忘记密码" />
             </a>

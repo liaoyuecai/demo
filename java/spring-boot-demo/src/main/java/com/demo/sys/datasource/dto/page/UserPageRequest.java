@@ -30,6 +30,8 @@ public class UserPageRequest extends PageListRequest<SysUserDto> {
                 "GROUP BY u.id",
                 List.of(
                         new QueryCriteria("u.deleted", QueryCriteria.Expression.EQUALS, 0),
+                        //默认超管账户id为0   任何时候都不查询出超管账户显示
+                        new QueryCriteria("u.id", QueryCriteria.Expression.GREATER_THAN, 0),
                         new QueryCriteria("u.username", QueryCriteria.Expression.CONTAINS, this.data.getUsername()),
                         new QueryCriteria("u.real_name", QueryCriteria.Expression.CONTAINS, this.data.getRealName()),
                         new QueryCriteria("u.phone", QueryCriteria.Expression.CONTAINS, this.data.getPhone())
