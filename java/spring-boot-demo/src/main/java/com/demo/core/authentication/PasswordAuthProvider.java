@@ -5,7 +5,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -14,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 public class PasswordAuthProvider implements AuthenticationProvider {
 
-    protected final UserDetailsService userDetailsService;
+    protected final UserDatasourceService userDatasourceService;
 
     protected final PasswordEncoder passwordEncoder;
 
@@ -22,8 +21,8 @@ public class PasswordAuthProvider implements AuthenticationProvider {
 
 
     // 构造方法
-    public PasswordAuthProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder, TokenManager tokenManager) {
-        this.userDetailsService = userDetailsService;
+    public PasswordAuthProvider(UserDatasourceService userDatasourceService, PasswordEncoder passwordEncoder, TokenManager tokenManager) {
+        this.userDatasourceService = userDatasourceService;
         this.passwordEncoder = passwordEncoder;
         this.tokenManager = tokenManager;
     }
@@ -35,15 +34,16 @@ public class PasswordAuthProvider implements AuthenticationProvider {
         UserAuthenticationToken authenticationToken = (UserAuthenticationToken) authentication;
         String username = authenticationToken.getPrincipal();// 获取凭证也就是用户的手机号
         String password = authenticationToken.getCredentials(); // 获取输入的验证码
+
         // 获取用户信息
-        AuthenticationUser user = (AuthenticationUser) userDetailsService.loadUserByUsername(username);
+        AuthenticationUser user = (AuthenticationUser) userDatasourceService.loadUserByUsername(username);
         // 验证密码是否匹配
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("用户名或密码错误");
         }
-
         UserAuthenticationToken authenticated = UserAuthenticationToken.createToken(user);
         user.setToken(tokenManager.generateToken(authenticated));
+        userDatasourceService.loadUserAuthority(user);
         return authenticated;
     }
 

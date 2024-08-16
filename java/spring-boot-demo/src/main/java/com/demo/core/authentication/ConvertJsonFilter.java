@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -54,7 +55,17 @@ public class ConvertJsonFilter extends AbstractAuthenticationProcessingFilter {
             throw new BadCredentialsException("用户名为空");
         }
         if (StringUtils.isBlank(user.getPassword())) {
-            throw new BadCredentialsException("用户名或密码错误");
+            throw new BadCredentialsException("密码为空");
+        }
+        if (StringUtils.isBlank(user.getVerificationCode())) {
+            throw new BadCredentialsException("验证码为空");
+        }
+        HttpSession session = request.getSession();
+        if (!user.getVerificationCode().toLowerCase().equals(session.getAttribute(WebSecurityConfig.VERIFICATION_CODE_SESSION_KEY))){
+            session.removeAttribute(WebSecurityConfig.VERIFICATION_CODE_SESSION_KEY);
+            throw new BadCredentialsException("验证码错误");
+        }else {
+            session.removeAttribute(WebSecurityConfig.VERIFICATION_CODE_SESSION_KEY);
         }
         UserAuthenticationToken authRequest = UserAuthenticationToken.getInstance(user.getUsername(), user.getPassword());
         try {

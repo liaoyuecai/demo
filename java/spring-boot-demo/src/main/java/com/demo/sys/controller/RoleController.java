@@ -1,7 +1,7 @@
 package com.demo.sys.controller;
 
-import com.demo.core.aop.RequestSave;
-import com.demo.core.aop.RequestSelect;
+import com.demo.core.aop.RequestBaseEntitySet;
+import com.demo.core.aop.RequestSetType;
 import com.demo.core.authentication.WebSecurityConfig;
 import com.demo.core.dto.ApiHttpRequest;
 import com.demo.core.dto.ApiHttpResponse;
@@ -26,28 +26,27 @@ public class RoleController {
 
 
     @PostMapping("/save")
-    @RequestSave
+    @RequestBaseEntitySet(checkCreateBy = true)
     public ApiHttpResponse save(@RequestBody ApiHttpRequest<SysRole> request) {
-        service.save(request.getData());
+        service.save(request);
         return request.success();
     }
 
     @PostMapping("/page")
-    @RequestSelect
     public ApiHttpResponse<PageList<SysRoleDto>> page(@RequestBody RolePageRequest request) {
         return request.success(service.findPageCustomCriteria(request, SysRoleDto.class));
     }
 
     @PostMapping("/delete")
+    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
-        service.deleteUpdate(request.getData());
+        service.deleteUpdate(request);
         return request.success();
     }
 
     @PostMapping("/bindMenu")
-    public ApiHttpResponse bindMenu(@RequestBody ApiHttpRequest<RoleBindMenu> request,
-                                    @RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_USER_DETAILS) AuthUserCache userDetails) {
-        service.bindMenu(request.getData(), userDetails);
+    public ApiHttpResponse bindMenu(@RequestBody ApiHttpRequest<RoleBindMenu> request) {
+        service.bindMenu(request);
         return request.success();
     }
 

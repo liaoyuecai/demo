@@ -3,7 +3,7 @@ CREATE TABLE `sys_user`
 (
     `id`          int(11)     NOT NULL AUTO_INCREMENT COMMENT '用户ID',
     `real_name`   varchar(20) NOT NULL COMMENT '真实名称',
-    `username`    varchar(50) NOT NULL COMMENT '账户名',
+    `username`    varchar(50) NOT NULL UNIQUE  COMMENT '账户名',
     `user_avatar`    varchar(50) NOT NULL COMMENT '头像',
     `status`      smallint(1) DEFAULT 1 COMMENT '状态 0禁用1启用',
     `password`    varchar(200) NOT NULL COMMENT '密码',
@@ -25,6 +25,7 @@ CREATE TABLE `sys_role`
     `role_name`       varchar(20) NOT NULL COMMENT '角色名称',
     `status`          smallint(1) DEFAULT 1 COMMENT '状态 0禁用1启用',
     `role_key`       varchar(20) DEFAULT NULL COMMENT '角色编码',
+    `role_type`       varchar(20) DEFAULT NULL COMMENT '角色类型（0 系统默认 1公开 2 不公开）',
     `description`     varchar(50) DEFAULT NULL COMMENT '角色描述',
     `create_time`     datetime    DEFAULT NULL COMMENT '创建时间',
     `create_by`       int(11)     NOT NULL COMMENT '创建人',

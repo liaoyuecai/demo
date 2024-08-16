@@ -1,6 +1,7 @@
 package com.demo.core.authentication;
 
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -13,7 +14,8 @@ public class UserAuthenticationToken extends AbstractAuthenticationToken {
 
     private String username;
     private String password;
-
+    protected String verificationCode;
+    protected HttpSession session;
     private UserAuthenticationToken(Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
     }
@@ -32,6 +34,7 @@ public class UserAuthenticationToken extends AbstractAuthenticationToken {
         UserAuthenticationToken authenticationToken = new UserAuthenticationToken(user.getAuthorities());
         authenticationToken.username = user.getUsername();
         authenticationToken.password = user.getPassword();
+        authenticationToken.verificationCode = user.getVerificationCode();
         // 认证成功后，将密码清除
         user.setPassword(null);
         // 设置为已认证状态

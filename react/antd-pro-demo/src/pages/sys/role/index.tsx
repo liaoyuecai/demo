@@ -1,12 +1,12 @@
-import {  post} from '@/services/ant-design-pro/api';
-import  { DeleteOutlined,  PlusOutlined, QuestionCircleOutlined,  SettingOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns   } from '@ant-design/pro-components';
+import { post } from '@/services/ant-design-pro/api';
+import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined, SettingOutlined } from '@ant-design/icons';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import {
   PageContainer,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Form, Input,  message,  Popconfirm, Row, Switch, Tooltip } from 'antd';
-import React, {  useEffect, useRef, useState } from 'react';
+import { Button, Form, Input, message, Popconfirm, Row, Select, Switch, Tooltip } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
 import FormSubmitModal from '@/components/common/FormSubmitModal';
 import FromTreeSelect, { FromTreeItem } from '@/components/common/FromTreeSelect';
 
@@ -35,9 +35,9 @@ const RolePage: React.FC = () => {
         const treeMap: Record<number, FromTreeItem> = {};
         data.data.forEach(item => {
           const id = item.id;
-          const treeItem:FromTreeItem = {
+          const treeItem: FromTreeItem = {
             key: item.id,
-            parentKey:item.parentId,
+            parentKey: item.parentId,
             value: item.id,
             title: item.menuName
           };
@@ -106,6 +106,17 @@ const RolePage: React.FC = () => {
       dataIndex: 'roleKey'
     },
     {
+      title: '角色类型',
+      dataIndex: 'roleType',
+      render(dom) {
+        switch (dom) {
+          case 1: return '公共角色'
+          case 2: return '非公共角色'
+        }
+        return ''
+      }
+    },
+    {
       title: '绑定菜单',
       dataIndex: 'menus',
       search: false
@@ -171,6 +182,17 @@ const RolePage: React.FC = () => {
             <Input />
           </Form.Item>
           <Form.Item
+            name={'roleType'}
+            label={'角色类型'}
+            initialValue={2}
+            rules={[{ required: true }]}
+          >
+            <Select >
+              <Select.Option value={1}>公共角色</Select.Option>
+              <Select.Option value={2}>非公共角色</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
             name={'description'}
             label={'角色描述'}
           >
@@ -204,8 +226,9 @@ const RolePage: React.FC = () => {
           </Popconfirm>
         ]}
         columns={columns}
+        rowKey={'id'}
         rowSelection={{
-          onChange: (selectedRowKeys) => {
+          onChange: (selectedRowKeys,e) => {
             setSelectedRowKeys(selectedRowKeys);
           },
         }}

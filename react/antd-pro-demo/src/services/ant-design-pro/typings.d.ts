@@ -7,7 +7,7 @@ declare namespace API {
     token?: string;
     avatar?: string;
     userid?: string;
-    menuData?: MenuData[];
+    menuList?: MenuData[];
     email?: string;
     signature?: string;
     title?: string;
@@ -122,11 +122,13 @@ declare namespace API {
     menuIcon?: string;
     menuPath: string;
   };
-  type TreeNode<T> = {  
-    key: number;  
-    value: number;  
-    title: string;  
-    children?: TreeNode<T>[];  
+  type TreeNode<T> = {
+    key: number | string;
+    parentKey?: number | string;
+    value: number | string;
+    isLeaf?: boolean;
+    title: string;
+    children?: TreeNode<T>[];
     // 其他可能的属性，使用泛型T来保持灵活性  
   } & T;
 }

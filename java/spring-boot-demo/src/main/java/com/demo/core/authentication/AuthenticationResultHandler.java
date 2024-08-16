@@ -77,7 +77,7 @@ public class AuthenticationResultHandler {
         this.authenticationEntry = (_, response, authException) -> {
             response.setContentType("application/json;charset=utf-8");
             response.setStatus(HttpStatus.OK.value());
-            response.getWriter().write(objectMapper.writeValueAsString(AuthenticationResponse.loginError(authException.getMessage())));
+            response.getWriter().write(objectMapper.writeValueAsString(AuthenticationResponse.tokenError(authException.getMessage())));
         };
         this.accessDenied = (_, response, accessDeniedException) -> {
             response.setContentType("application/json;charset=utf-8");

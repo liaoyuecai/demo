@@ -20,7 +20,7 @@ type UserCache = {
   username: string;
   avatar: string;
   token: string;
-  menuData?: API.MenuData[]
+  menuList?: API.MenuData[]
 }
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -33,13 +33,13 @@ export async function getInitialState(): Promise<{
 }> {
   const fetchUserInfo = async () => {
     try {
-      const msg = await post<UserCache>('/auth/current', {})
+      const msg = await post<UserCache>('/user/current', {})
       if (msg.data) {
         return {
           name: msg.data.username,
           token: msg.data.token,
-          avatar: process.env.baseUrl + msg.data.avatar,
-          menuData: msg.data?.menuData,
+          avatar: msg.data.avatar,
+          menuList: msg.data?.menuList,
         };
       }
       history.push(loginPath);
@@ -111,9 +111,10 @@ function listToTree(menus: API.MenuData[]): MenuDataItem[] {
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    actionsRender: () => [<Question key="doc" />, <SelectLang key="SelectLang" />],
+    //暂时不需要文档及语言切换
+    // actionsRender: () => [<Question key="doc" />, <SelectLang key="SelectLang" />],
     avatarProps: {
-      src: initialState?.currentUser?.avatar,
+      src: '/api' + initialState?.currentUser?.avatar,
       title: <AvatarName />,
       render: (_, avatarChildren) => {
         return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
@@ -147,9 +148,9 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     menu: {
       params: initialState,
       locale: false,
-      request: async (params, defaultMenuData) => {
-        if (initialState?.currentUser && initialState.currentUser?.menuData)
-          return listToTree(initialState?.currentUser?.menuData);
+      request: async (_,) => {
+        if (initialState?.currentUser && initialState.currentUser?.menuList)
+          return listToTree(initialState?.currentUser?.menuList);
         return [];
       },
     },

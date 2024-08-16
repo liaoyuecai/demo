@@ -10,4 +10,6 @@ public interface SysUserRepository extends CustomerBaseRepository<SysUser> {
 
 
     SysUser findByUsernameAndStatusAndDeleted(String username, int i, int i1);
+
+    SysUser findByUsernameAndDeleted(String username, int i);
 }

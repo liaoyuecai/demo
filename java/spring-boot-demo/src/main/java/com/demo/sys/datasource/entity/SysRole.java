@@ -12,6 +12,7 @@ public class SysRole extends TableBaseEntity {
 
     private String roleName;
     private String roleKey;
+    private Integer roleType;
     private String description;
 
 
