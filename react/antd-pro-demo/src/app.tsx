@@ -1,14 +1,13 @@
-import { Footer, Question, SelectLang, AvatarDropdown, AvatarName } from '@/components';
-import { LinkOutlined } from '@ant-design/icons';
+import { Footer,  AvatarDropdown, AvatarName } from '@/components';
+import { LinkOutlined, SmileOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings, MenuDataItem } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
-import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
+import type {  RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 import { post } from '@/services/ant-design-pro/api';
 import React from 'react';
-import * as allIcons from '@ant-design/icons';
 import { Row } from 'antd';
 import CreateIcon from './components/common/CreateIcon';
 const isDev = process.env.NODE_ENV === 'development';
@@ -147,8 +146,18 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       locale: false,
       request: async (_,) => {
         if (initialState?.currentUser && initialState.currentUser?.menuList)
-          return listToTree(initialState?.currentUser?.menuList);
-        return [];
+          return [{
+            name: '欢迎',
+            key: 'welcome',
+            icon: <SmileOutlined />, 
+            path: '/welcome',
+        },...listToTree(initialState?.currentUser?.menuList)];
+        return [{
+          name: '欢迎',
+          key: 'welcome',
+          icon: <SmileOutlined />, 
+          path: '/welcome',
+      }];
       },
     },
     // bgLayoutImgList: [
