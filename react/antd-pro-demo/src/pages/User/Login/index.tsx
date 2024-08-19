@@ -246,20 +246,21 @@ const Login: React.FC = () => {
             onChange={setType}
             centered
             items={[
-              {
-                key: 'account',
-                label: intl.formatMessage({
-                  id: 'pages.login.accountLogin.tab',
-                  defaultMessage: '账户密码登录',
-                }),
-              },
-              {
-                key: 'mobile',
-                label: intl.formatMessage({
-                  id: 'pages.login.phoneLogin.tab',
-                  defaultMessage: '手机号登录',
-                }),
-              },
+              //未实现手机号登录，隐藏选项
+              // {
+              //   key: 'account',
+              //   label: intl.formatMessage({
+              //     id: 'pages.login.accountLogin.tab',
+              //     defaultMessage: '账户密码登录',
+              //   }),
+              // },
+              // {
+              //   key: 'mobile',
+              //   label: intl.formatMessage({
+              //     id: 'pages.login.phoneLogin.tab',
+              //     defaultMessage: '手机号登录',
+              //   }),
+              // },
             ]}
           />
 

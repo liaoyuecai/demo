@@ -16,6 +16,8 @@ public class AuthUserCache extends AuthenticationUser {
     //识别是否root账户
 
     private String avatar;
+    private String email;
+    private String phone;
     private List<SysRole> roleList;
     private List<SysMenu> menuList;
 
@@ -24,5 +26,7 @@ public class AuthUserCache extends AuthenticationUser {
         this.id = user.getId();
         this.setUsername(user.getRealName());
         this.avatar = user.getUserAvatar();
+        this.email = user.getEmail();
+        this.phone = user.getPhone();
     }
 }

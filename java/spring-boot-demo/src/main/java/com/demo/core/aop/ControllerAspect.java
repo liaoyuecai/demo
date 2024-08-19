@@ -53,7 +53,7 @@ public class ControllerAspect {
             log.info("http uri:{}, request:{},response:{}", uri, args, response);
             return response;
         } catch (GlobalException e) {
-            log.error("http error uri:{}, request:{}", uri, args, e);
+            log.error("http error uri:{}, request:{}", uri, args, e.getMessage());
             return new ApiHttpResponse(e.getCode());
         } catch (Exception e) {
             log.error("http error uri:{}, request:{}", uri, args, e);

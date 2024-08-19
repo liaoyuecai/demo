@@ -20,6 +20,8 @@ type UserCache = {
   username: string;
   avatar: string;
   token: string;
+  email?: string;
+  phone?: string;
   menuList?: API.MenuData[]
 }
 /**
@@ -35,12 +37,7 @@ export async function getInitialState(): Promise<{
     try {
       const msg = await post<UserCache>('/user/current', {})
       if (msg.data) {
-        return {
-          name: msg.data.username,
-          token: msg.data.token,
-          avatar: msg.data.avatar,
-          menuList: msg.data?.menuList,
-        };
+        return msg.data;
       }
       history.push(loginPath);
     } catch (error) {
