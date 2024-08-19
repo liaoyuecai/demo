@@ -1,9 +1,15 @@
+
 spring:
   application:
     name: data-platform
     multipart:
-      max-file-size: 500MB
-      max-request-size: 500MB
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mvc:
+    static-path-pattern: /static/**
+  web:
+    resources:
+      static-locations: file:${server.static-path}
   jpa:
     open-in-view: false
     show-sql: true
@@ -16,14 +22,18 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:mysql://127.0.0.1:3306/demo?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
-    username: user
-    password: password
+    username: root
+    password: 111111
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 8
       maximum-pool-size: 8
       transaction-isolation: TRANSACTION_READ_COMMITTED #降低事务隔离级别，提高写入速度
+
+
 server:
+  #静态文件放置目录，需要创建此目录，头像存放在此目录的avatar文件夹下，同样需要创建
+  static-path: E:\project\demo\static
   port: 8081
 
 authentication:
@@ -32,12 +42,12 @@ authentication:
   permit: /health,/static/**,/auth/resetRootPassword
 
 user:
-  root: #设置超管账户信息
-    username: root  #超管账户名
+  root: #设置超管账户信息，数据库中超管用户初始密码为123456，建议修改后部署，或重置后对外开放端口
+    username: root  #超管账户名，安全起见，建议修改此用户名，同步修改数据库中用户名
     resetCode: ^&23#sEdkfdsSa  #重置密码时的重置码
   default:
     password: 123456 #新建用户时默认密码
-    avatar: /static/avatar/dog.jpg #新建用户时默认头像
+    avatar: /static/avatar/cat.png #新建用户时默认头像
 
 logging:
   config: classpath:logback-spring.xml

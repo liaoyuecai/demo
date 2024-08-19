@@ -5,6 +5,7 @@ import com.demo.core.aop.RequestSetType;
 import com.demo.core.authentication.WebSecurityConfig;
 import com.demo.core.dto.*;
 import com.demo.sys.datasource.AuthUserCache;
+import com.demo.sys.datasource.dto.CurrentUser;
 import com.demo.sys.datasource.dto.ResetPassword;
 import com.demo.sys.datasource.dto.SysUserDto;
 import com.demo.sys.datasource.dto.UserBindJobAndRole;
@@ -16,7 +17,9 @@ import jakarta.annotation.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -44,12 +47,18 @@ public class UserController {
     }
 
     @PostMapping("/findRoles")
-    public ApiHttpResponse<List<SysRole>> findRoles(@RequestBody ApiHttpRequest request) {
-        return request.success(service.findRoles((AuthUserCache) request.getUser()));
+    public ApiHttpResponse<List<SysRole>> findRoles(@RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_USER_DETAILS) AuthUserCache cache) {
+        return ApiHttpResponse.success(service.findRoles(cache));
+    }
+
+    @PostMapping("/updateSelf")
+    public ApiHttpResponse updateSelf(@RequestBody ApiHttpRequest<SysUser> request, @RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_AUTHENTICATION) Authentication authentication) {
+        service.updateSelf(request, authentication);
+        return request.success();
     }
 
     @PostMapping("/delete")
-    @RequestBaseEntitySet(checkCreateBy = true,type = RequestSetType.DELETE)
+    @RequestBaseEntitySet(checkCreateBy = true, type = RequestSetType.DELETE)
     public ApiHttpResponse delete(@RequestBody DeleteRequest request) {
         service.deleteUpdate(request);
         return request.success();
@@ -67,8 +76,14 @@ public class UserController {
     }
 
     @PostMapping("/current")
-    public ApiHttpResponse<AuthUserCache> current(@RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_AUTHENTICATION) Authentication authentication) {
-        return ApiHttpResponse.success(service.currentUser(authentication));
+    public ApiHttpResponse<CurrentUser> current(@RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_USER_DETAILS) AuthUserCache cache) {
+        return ApiHttpResponse.success(service.currentUser(cache));
+    }
+
+
+    @PostMapping("/uploadAvatar")
+    public ApiHttpResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file, @RequestAttribute(WebSecurityConfig.REQUEST_ATTRIBUTE_AUTHENTICATION) Authentication authentication) throws IOException {
+        return ApiHttpResponse.success(service.uploadAvatar(file, authentication));
     }
 
     @PostMapping("/resetPassword")

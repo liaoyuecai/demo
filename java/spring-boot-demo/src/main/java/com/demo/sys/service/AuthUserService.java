@@ -5,9 +5,11 @@ import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
 import com.demo.core.utils.StringUtils;
 import com.demo.sys.datasource.AuthUserCache;
+import com.demo.sys.datasource.dao.SysMenuRepository;
 import com.demo.sys.datasource.dao.SysRoleRepository;
 import com.demo.sys.datasource.dao.SysUserRepository;
 import com.demo.sys.datasource.dto.ResetRootPassword;
+import com.demo.sys.datasource.entity.SysRole;
 import com.demo.sys.datasource.entity.SysUser;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +25,8 @@ public class AuthUserService implements UserDatasourceService {
     SysUserRepository userRepository;
     @Resource
     SysRoleRepository roleRepository;
+    @Resource
+    SysMenuRepository menuRepository;
     @Resource
     private PasswordEncoder passwordEncoder;
     @Value("${user.root.username:'root'}")
@@ -42,11 +46,14 @@ public class AuthUserService implements UserDatasourceService {
     @Override
     public void loadUserAuthority(UserDetails details) {
         AuthUserCache userCache = (AuthUserCache) details;
-        //todo 实际不需要这么多字段，后面修改
-        if (userCache.isRoot())
+        if (userCache.isRoot()) {
             userCache.setRoleList(roleRepository.findNotDeletedAndStatus());
-        else
+            userCache.setMenuList(menuRepository.findByRoot());
+        } else {
             userCache.setRoleList(roleRepository.findRolesByUserId(userCache.getId()));
+            if (userCache.getRoleList() != null && !userCache.getRoleList().isEmpty())
+                userCache.setMenuList(menuRepository.findByRoleId(userCache.getRoleList().stream().map(SysRole::getId).toList()));
+        }
     }
 
 
@@ -60,7 +67,6 @@ public class AuthUserService implements UserDatasourceService {
             userRepository.save(user);
         } else {
             throw new GlobalException(ErrorCode.PARAMS_ERROR_RESET_CODE_REPEAT);
-
         }
     }
 }

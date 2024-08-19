@@ -9,6 +9,7 @@ declare namespace API {
     userid?: string;
     menuList?: MenuData[];
     email?: string;
+    root?: boolean;
     signature?: string;
     title?: string;
     group?: string;

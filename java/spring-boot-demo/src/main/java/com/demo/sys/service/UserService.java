@@ -9,6 +9,7 @@ import com.demo.core.service.CURDService;
 import com.demo.core.utils.StringUtils;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dao.*;
+import com.demo.sys.datasource.dto.CurrentUser;
 import com.demo.sys.datasource.dto.ResetPassword;
 import com.demo.sys.datasource.dto.UserBindJobAndRole;
 import com.demo.sys.datasource.entity.*;
@@ -19,7 +20,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -55,25 +59,9 @@ public class UserService extends CURDService<SysUser, SysUserRepository> {
         super(repository);
     }
 
-    /**
-     * 完善当前用户缓存信息
-     * 完善用户菜单、角色等
-     *
-     * @param authentication
-     */
-    public AuthUserCache currentUser(Authentication authentication) {
-        //todo 后期移动到AuthUserService中
-        AuthUserCache userCache = (AuthUserCache) authentication.getDetails();
-        if (userCache.isRoot()) {
-            List<SysMenu> menus = menuRepository.findByRoot();
-            if (menus != null) userCache.setMenuList(menus);
-        }
-        if (userCache.getRoleList() != null && !userCache.getRoleList().isEmpty()) {
-            List<SysMenu> menus = menuRepository.findByRoleId(userCache.getRoleList().stream().map(SysRole::getId).toList());
-            if (menus != null) userCache.setMenuList(menus);
-        }
-        tokenManager.refreshToken(userCache.getToken(), authentication);
-        return userCache;
+
+    public CurrentUser currentUser(AuthUserCache cache) {
+        return new CurrentUser(cache);
     }
 
     @Override
@@ -247,5 +235,48 @@ public class UserService extends CURDService<SysUser, SysUserRepository> {
         user.setUpdateBy(user.getId());
         user.setUpdateTime(LocalDateTime.now());
         repository.save(user);
+    }
+
+    public void updateSelf(ApiHttpRequest<SysUser> request, Authentication authentication) {
+        if (request.getUser().isRoot())
+            throw new GlobalException(ErrorCode.ACCESS_DATA_UPDATE_ERROR);
+        SysUser user = request.getData();
+        user.setId(request.getUser().getId());
+        user.setUpdateBy(request.getUser().getId());
+        user.setUpdateTime(LocalDateTime.now());
+        //清除多余属性，避免被篡改
+        user.setUsername(null);
+        user.setUserAvatar(null);
+        user.setPassword(null);
+        user.setCreateBy(null);
+        user.setCreateTime(null);
+        user.setStatus(null);
+        user.setDeleted(null);
+        repository.save(user);
+        AuthUserCache cache = (AuthUserCache) request.getUser();
+        cache.setUsername(user.getRealName());
+        tokenManager.refreshToken(cache.getToken(), authentication);
+    }
+
+    @Value("${server.static-path}")
+    private String staticPath;
+
+    public String uploadAvatar(MultipartFile file, Authentication authentication) throws IOException {
+        AuthUserCache cache = (AuthUserCache) authentication.getDetails();
+        Optional<SysUser> optional = repository.findById(cache.getId());
+        if (!optional.isPresent())
+            throw new GlobalException(ErrorCode.ACCESS_DATA_UPDATE_ERROR);
+        String path = "/avatar/" + UUID.randomUUID() + ".png";
+        File newFile = new File(staticPath + path);
+        newFile.createNewFile();
+        file.transferTo(newFile);
+        SysUser user = optional.get();
+        if (!user.getUserAvatar().equals(defaultAvatar))
+            new File(staticPath + user.getUserAvatar().replace("/static","")).delete();
+        user.setUserAvatar("/static"+path);
+        repository.save(user);
+        cache.setAvatar(user.getUserAvatar());
+        tokenManager.refreshToken(cache.getToken(), authentication);
+        return user.getUserAvatar();
     }
 }
