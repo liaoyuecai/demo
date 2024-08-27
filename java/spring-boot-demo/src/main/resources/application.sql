@@ -91,7 +91,6 @@ INSERT INTO `sys_menu` VALUES ('3', '1', '1', '2', '用户管理', '/sys/user', 
 INSERT INTO `sys_menu` VALUES ('7', '1', '1', '3', '角色管理', '/sys/role', 'ContactsOutlined', '2024-08-07 17:10:15', '1', null, null, '0');
 INSERT INTO `sys_menu` VALUES ('8', '1', '1', '5', '部门管理', '/sys/dept', 'ClusterOutlined', '2024-08-12 11:46:49', '1', null, null, '0');
 INSERT INTO `sys_menu` VALUES ('9', '1', '1', '6', '岗位管理', '/sys/job', 'ContactsOutlined', '2024-08-12 15:19:56', '1', '2024-08-13 10:18:26', '1', '0');
-INSERT INTO `sys_menu` VALUES ('10', '1', '1', '8', '用户管理', '/sys/user', 'UserOutlined', '2024-08-13 10:18:19', '1', null, null, '0');
 
 -- ----------------------------
 -- Table structure for sys_role
@@ -249,3 +248,66 @@ CREATE TABLE `sys_user_role` (
 INSERT INTO `sys_user_role` VALUES ('20', '1', '1');
 INSERT INTO `sys_user_role` VALUES ('21', '1', '2');
 INSERT INTO `sys_user_role` VALUES ('22', '3', '4');
+
+
+DROP TABLE IF EXISTS `workflow_record`;
+CREATE TABLE `workflow_record` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_name` varchar(20) NOT NULL COMMENT '流程名称',
+  `workflow_nodes` text NOT NULL COMMENT '流程图形节点',
+  `status` smallint(1) DEFAULT '1' COMMENT '状态 0禁用1启用',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_by` int(11) NOT NULL COMMENT '创建人',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `update_by` int(11) DEFAULT NULL COMMENT '修改人',
+  `deleted` smallint(1) DEFAULT '0' COMMENT '删除状态',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程表';
+
+DROP TABLE IF EXISTS `workflow_node`;
+CREATE TABLE `workflow_node` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `node_name` varchar(20) NOT NULL COMMENT '节点名称',
+  `node_type` smallint(2) NOT NULL COMMENT '节点类型',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点表';
+
+DROP TABLE IF EXISTS `workflow_node_user`;
+CREATE TABLE `workflow_node_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `node_id` int(11) NOT NULL COMMENT '节点id',
+  `user_id` int(11) NOT NULL COMMENT '用户id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点绑定用户表';
+
+DROP TABLE IF EXISTS `workflow_node_job`;
+CREATE TABLE `workflow_node_job` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `node_id` int(11) NOT NULL COMMENT '节点id',
+  `job_id` int(11) NOT NULL COMMENT '岗位id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点绑定岗位表';
+
+DROP TABLE IF EXISTS `workflow_active`;
+CREATE TABLE `workflow_active` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_id` int(11) NOT NULL COMMENT '流程id',
+  `active_name` varchar(20) NOT NULL COMMENT '发起流程名称',
+  `active_node_id` int(11) NOT NULL COMMENT '目前流程节点',
+  `active_status` smallint(2) NOT NULL COMMENT '流程状态：1 草稿 2 流转中 3 完成 4 审核通过 5 审核不通过',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_by` int(11) NOT NULL COMMENT '创建人',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程活动表';
+
+DROP TABLE IF EXISTS `workflow_active_history`;
+CREATE TABLE `workflow_active_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_id` int(11) NOT NULL COMMENT '流程id',
+  `active_node_id` int(11) NOT NULL COMMENT '目前流程节点',
+  `active_node_id` int(11) NOT NULL COMMENT '目前流程节点',
+  `data_status` smallint(1) NOT NULL COMMENT '数据状态：1活跃数据 2历史数据',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_by` int(11) NOT NULL COMMENT '创建人',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程活动记录表';

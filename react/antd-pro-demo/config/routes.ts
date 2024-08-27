@@ -61,7 +61,6 @@ export default [
     component: './404',
   },
 
-
   {
     name: 'sys',
     path: '/sys',
@@ -92,5 +91,10 @@ export default [
         component: './sys/job',
       }
     ]
+  }, {
+    name: 'workflow',
+    path: '/workflow',
+    component: './workflow',
+    
   }
 ];
