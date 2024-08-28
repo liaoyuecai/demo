@@ -5,9 +5,10 @@ import {
   PageContainer,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Form, Input, message, Modal, Popconfirm, Row, Switch, Tooltip, TreeSelect } from 'antd';
+import { Button,  Input, message, Modal, Popconfirm, Row, Switch} from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import WorkflowEdit from './update'
+import { set } from 'lodash';
 
 
 export type SimpleUser = {
@@ -19,27 +20,41 @@ export type SimpleUser = {
 
 const Page: React.FC = () => {
   const [modalOpen, handleModalOpen] = useState<boolean>(false);
-  const [bingMenuModalOpen, handleBingMenuModalOpen] = useState<boolean>(false);
   const [userList, setUserList] = useState<API.TreeNode<any>[]>([]);
   const [jobTreeData, setJobTreeData] = useState<API.TreeNode<any>[]>([]);
+  const [workflowName, setWorkflowName] = useState<string>();
+  const [workflow, setWorkflow] = useState<any>();
   const actionRef = useRef<ActionType>();
 
 
-
-  const [form] = Form.useForm();
-  const [bingMenuForm] = Form.useForm();
+  const editer = useRef<{ nodes: any[]}>();
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<any>([]);
+  const [currentNodes, setCurrentNodes] = useState<string>();
+
+  const [workflowTreeData,setWorkflowTreeData] = useState<API.TreeNode<any>[]>([]);
+
+  const reloadWorkflowTreeData = ()=>{
+    post<{id:number,workflowName:string}[]>('/workflow/record/findRecords').then(data=>{
+      if (data.code === 0 && data.data) {
+        const nodes:API.TreeNode<any>[] = [];
+        data.data.map(d=>{
+          nodes.push({key:d.id,title:d.workflowName,value:d.id})
+        })
+        setWorkflowTreeData(nodes)
+      }
+    })
+  }
 
   useEffect(() => {
     post<SimpleUser[]>('/workflow/record/users').then((data) => {
       if (data.code === 0 && data.data) {
-        const treeData:API.TreeNode<any>[] = [];
-        data.data.map(n=>{
+        const treeData: API.TreeNode<any>[] = [];
+        data.data.map(n => {
           treeData.push({
-            key:n.id,
-            value:n.id,
-            title:n.realName+' '+n.phone
+            key: n.id,
+            value: n.id,
+            title: n.realName + ' ' + n.phone
           })
         })
         setUserList(treeData)
@@ -47,7 +62,9 @@ const Page: React.FC = () => {
     })
     post<API.TreeNode<any>[]>('/user/findDeptAndJobs').then((data) => {
       if (data.code === 0 && data.data) {
-        setJobTreeData(data.data)
+        setJobTreeData([{ key: -1, value: -1, title: '上一节点处理人直属上级' }, 
+          { key: -2, value: -2, title: '上一节点处理人部门负责人' }, 
+          ...data.data])
       }
     })
   }, [])
@@ -59,13 +76,15 @@ const Page: React.FC = () => {
       dataIndex: 'workflowName',
       render: (value, record) => {
         return <a href='#' onClick={() => {
-          form.setFieldsValue(record)
+          setWorkflowName(value + '')
+          setWorkflow(record)
+          setCurrentNodes(record.workflowNodes)
           handleModalOpen(true);
         }}>{value}</a>;
       }
     },
     {
-      title: '文本状态',
+      title: '草稿/发布',
       search: false,
       dataIndex: 'workflowStatus',
       render(dom) {
@@ -93,9 +112,17 @@ const Page: React.FC = () => {
     }
   ];
   const { confirm } = Modal;
+
+  const saveSuccess = ()=>{
+    message.info('保存成功！');
+    actionRef.current?.reload();
+    setWorkflowName('')
+    handleModalOpen(false)
+    setCurrentNodes(undefined)
+  }
   return (
     <PageContainer>
-      <Modal title={'编辑流程'} width={1000} open={modalOpen} onOk={() => { }}
+      <Modal title={<Row><span style={{ paddingTop: '5px' }}>流程名称：</span><Input onChange={(val) => setWorkflowName(val.target.value)} style={{ width: '300px' }} value={workflowName} /></Row>} width={1000} open={modalOpen}
         onCancel={() => {
           confirm({
             title: '确定要取消吗？',
@@ -103,14 +130,96 @@ const Page: React.FC = () => {
             content: '您的更改尚未保存，确定要离开吗？',
             onOk() {
               handleModalOpen(false)
+              setWorkflowName('')
+              setCurrentNodes(undefined)
             },
             onCancel() {
             },
           });
-
         }}
+        
+        footer={<div><Button style={{ marginRight: '15px' }} onClick={() => {
+          confirm({
+            title: '确定要取消吗？',
+            icon: <ExclamationCircleFilled />,
+            content: '您的更改尚未保存，确定要离开吗？',
+            onOk() {
+              handleModalOpen(false)
+              setWorkflowName('')
+              setCurrentNodes(undefined)
+            },
+            onCancel() {
+            },
+          });
+        }}>取消</Button>
+          {(!workflow || workflow.workflowStatus == 0) &&
+            <Button style={{ marginRight: '15px' }} onClick={() => {
+              if (!workflowName || workflowName?.trim() === '') {
+                message.error('流程名不能为空')
+              } else {
+                if (editer.current) {
+                  post('/workflow/record/save', {
+                    data: {
+                      id:workflow?.id,
+                      workflowName: workflowName,
+                      workflowStatus: 0, workflowNodes: JSON.stringify(editer.current.nodes)
+                    }
+                  }).then(data => {
+                    if (data.code === 0) {
+                      saveSuccess();
+                    }
+                  })
+                }
+              }
+            }}>保存草稿</Button>}
+          <Button style={{ marginRight: '15px' }} type='primary' onClick={() => {
+            if (!workflowName || workflowName?.trim() === '') {
+              message.error('流程名不能为空')
+            } else {
+              if (workflow && workflow.workflowStatus == 1) {
+                confirm({
+                  title: '确定要修改吗？',
+                  icon: <ExclamationCircleFilled />,
+                  content: '修改已发布的流程可能造成正在执行的流程被废弃，您确定要修改此流程吗？',
+                  onOk() {
+                    if (editer.current) {
+                      post('/workflow/record/save', {
+                        data: {
+                          id:workflow?.id,
+                          workflowName: workflowName,
+                          workflowStatus: 1, workflowNodes: JSON.stringify(editer.current.nodes)
+                        }
+                      }).then(data => {
+                        if (data.code === 0) {
+                          saveSuccess();
+                        }
+                      })
+                    }
+                  },
+                  onCancel() {
+                  },
+                });
+              } else {
+                if (editer.current) {
+                  post('/workflow/record/save', {
+                    data: {
+                      id:workflow?.id,
+                      workflowName: workflowName,
+                      workflowStatus: 1, workflowNodes: JSON.stringify(editer.current.nodes)
+                    }
+                  }).then(data => {
+                    if (data.code === 0) {
+                      saveSuccess();
+                    }
+                  })
+                }
+              }
+
+            }
+          }}>发布</Button>
+        </div>}
       >
-        <WorkflowEdit users={userList} jobs={jobTreeData}/>
+        <WorkflowEdit ref={editer} users={userList} jobs={jobTreeData} nodes={currentNodes} workfolws={workflowTreeData}/>
       </Modal>
       <ProTable
         actionRef={actionRef}
@@ -119,7 +228,9 @@ const Page: React.FC = () => {
             type="primary"
             key="primary"
             onClick={() => {
+              setCurrentNodes('{}')
               handleModalOpen(true);
+              setWorkflow(undefined)
             }}
           >
             <PlusOutlined />新建
@@ -147,6 +258,7 @@ const Page: React.FC = () => {
         request={async (params) => {
           const res = await post<API.Page<any>>('/workflow/record/page', { pageSize: params.pageSize, current: params.current, data: { ...params } });
           if (res && res.data) {
+            reloadWorkflowTreeData();
             return {
               data: res.data.list,
               total: res.data.total,

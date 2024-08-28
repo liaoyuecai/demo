@@ -256,6 +256,7 @@ CREATE TABLE `workflow_record` (
   `workflow_name` varchar(20) NOT NULL COMMENT '流程名称',
   `workflow_nodes` text NOT NULL COMMENT '流程图形节点',
   `status` smallint(1) DEFAULT '1' COMMENT '状态 0禁用1启用',
+  `workflow_status` smallint(1)  NOT NULL COMMENT '流程状态 0草稿 1发布',
   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
   `create_by` int(11) NOT NULL COMMENT '创建人',
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
@@ -267,8 +268,14 @@ CREATE TABLE `workflow_record` (
 DROP TABLE IF EXISTS `workflow_node`;
 CREATE TABLE `workflow_node` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_id` int(11) NOT NULL   COMMENT '流程id',
+  `parent_id` int(11)  COMMENT '上级节点',
+  `child_workflow_id` int(11)  COMMENT '子流程id，当节点为子流程节点时生效',
+  `if_return` int(11)  COMMENT '是否可以回退',
+  `if_condition` int(1)  COMMENT '判断条件：当上级节点为决策节点时，字段值0为假，1为真',
   `node_name` varchar(20) NOT NULL COMMENT '节点名称',
-  `node_type` smallint(2) NOT NULL COMMENT '节点类型',
+  `node_type` smallint(2) NOT NULL COMMENT '节点类型 1开始，2结束，3任务节点，4子流程节点，5决策节点',
+  `deleted` smallint(1) DEFAULT '0' COMMENT '删除状态',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点表';
 

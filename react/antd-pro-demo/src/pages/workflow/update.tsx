@@ -3,24 +3,26 @@ import { DragOutlined, ExclamationCircleFilled, ExpandAltOutlined, } from '@ant-
 import { Button, Col, Form, Input, message, Modal, Row, Select, Switch, Tooltip, TreeSelect } from 'antd';
 
 
-import React, { MouseEvent, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, MouseEvent, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 
 type Node = {
     key: number;//标识
-    type: 1 | 2 | 3 | 4 | 5 | 6;//1开始，2结束，3任务节点，4决策节点，5子流程节点,6连接线
+    type: 1 | 2 | 3 | 4 | 5 | 6;//1开始，2结束，3任务节点，4子流程节点，5决策节点,6连接线
     name?: string;//名称
     x: number;//坐标x
     y: number;//坐标y
     radius?: number;//半径
     width?: number;//宽
     heigth?: number;//高
+    childWorkflowId?: number;//子流程id
     userIds?: number[];//绑定用户
     jobIds?: number[];//绑定岗位
     isCheck: boolean;//是否选中
     startNode?: number;//开始节点--作连接线时使用
     endNode?: number;//结束节点--作连接线时使用
-    isReturn?: boolean;
+    ifReturn?: boolean;
+    ifCondition?: boolean;
     //连接线线路
     ponits?: { start: { x: number, y: number }, center?: { x: number, y: number }[], end: { x: number, y: number }, arrow?: { x: number, y: number }[] };
     endPoint?: { x: number, y: number };//结束点--作连接线未完成画虚线时使用
@@ -28,8 +30,10 @@ type Node = {
 type WorkflowEditProps = {
     users: API.TreeNode<any>[];
     jobs: API.TreeNode<any>[];
+    nodes?: string;
+    workfolws?: API.TreeNode<any>[]
 }
-const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
+const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [nodes, setNodes] = useState<Record<number, Node | undefined>>({});
     const [checkButton, setCheckButton] = useState<number>();
@@ -38,6 +42,10 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
     const [mouseDown, setMouseDown] = useState<boolean>(false);
     const [selectFrom] = Form.useForm();
     const [selectMadolOpen, setSelectMadolOpen] = useState<boolean>(false);
+
+    useImperativeHandle(ref, () => ({
+        nodes: nodes
+    }));
     /**
      * 检查鼠标是否点击到线段
      * @param click 鼠标坐标
@@ -198,6 +206,21 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
         }
     }
 
+
+    /**
+     * 生成一个新节点编号
+     * @param record 
+     * @returns 
+     */
+    function findNewKey<T>(record: Record<number, T | undefined>): number {
+        let lastKey = 0;
+        for (const key in record) {
+            if (record.hasOwnProperty(key) && !isNaN(Number(key)) && Number(key) > lastKey) {
+                lastKey = Number(key);
+            }
+        }
+        return lastKey + 1;
+    }
     /**
      * 根据连接的两点计算线路点
      * @param startNode 
@@ -296,202 +319,198 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
     }
 
     useEffect(() => {
-        if (canvasRef.current && nodes && Object.values(nodes).length > 0) {
+        if (canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d');
             if (ctx) {
                 ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                Object.values(nodes).map(node => {
-                    if (node) {
-                        switch (node.type) {
-                            case 1:
-                            case 2:
-                                if (node.radius) {
-                                    ctx.beginPath();
-                                    ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
-                                    ctx.fillStyle = node.type === 1 ? '#90EE90' : '#FFA07A';
-                                    ctx.fill();
-                                    ctx.lineWidth = 0.5;
-                                    ctx.strokeStyle = 'black';
-                                    ctx.stroke();
-                                    // 添加文字  
-                                    ctx.fillStyle = '#000000'; // 文字颜色  
-                                    ctx.font = '12px Arial'; // 文字样式  
-                                    ctx.textAlign = 'center'; // 文字对齐方式  
-                                    ctx.fillText(node.type === 1 ? '开始' : '结束', node.x, node.y + 2);
-                                    ctx.stroke();
-                                    if (node.isCheck) {
-                                        // 设定正方形的位置和尺寸
-                                        const halfSize = node.radius + 2;
-                                        // 绘制正方形的虚线边框  
-                                        ctx.setLineDash([5, 5]); // 设置虚线样式，5个单位实线，5个单位间隔  
+                if (nodes && Object.values(nodes).length > 0) {
+                    Object.values(nodes).map(node => {
+                        if (node) {
+                            switch (node.type) {
+                                case 1:
+                                case 2:
+                                    if (node.radius) {
                                         ctx.beginPath();
-                                        ctx.rect(node.x - halfSize, node.y - halfSize, halfSize * 2, halfSize * 2);
-                                        ctx.strokeStyle = 'blue'; // 边框颜色  
+                                        ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+                                        ctx.fillStyle = node.type === 1 ? '#90EE90' : '#FFA07A';
+                                        ctx.fill();
+                                        ctx.lineWidth = 0.5;
+                                        ctx.strokeStyle = 'black';
                                         ctx.stroke();
-                                        //绘制完虚线后重置线型为实线  
-                                        ctx.setLineDash([]);
+                                        // 添加文字  
+                                        ctx.fillStyle = '#000000'; // 文字颜色  
+                                        ctx.font = '12px Arial'; // 文字样式  
+                                        ctx.textAlign = 'center'; // 文字对齐方式  
+                                        ctx.fillText(node.type === 1 ? '开始' : '结束', node.x, node.y + 2);
+                                        ctx.stroke();
+                                        if (node.isCheck) {
+                                            // 设定正方形的位置和尺寸
+                                            const halfSize = node.radius + 2;
+                                            // 绘制正方形的虚线边框  
+                                            ctx.setLineDash([5, 5]); // 设置虚线样式，5个单位实线，5个单位间隔  
+                                            ctx.beginPath();
+                                            ctx.rect(node.x - halfSize, node.y - halfSize, halfSize * 2, halfSize * 2);
+                                            ctx.strokeStyle = 'blue'; // 边框颜色  
+                                            ctx.stroke();
+                                            //绘制完虚线后重置线型为实线  
+                                            ctx.setLineDash([]);
+                                        }
                                     }
-                                }
-                                break;
-                            case 3:
-                            case 4:
-                                if (node.heigth && node.width) {
-                                    ctx.beginPath();
-                                    const radius = 20; // 圆角的大小 
-                                    const x = node.x - node.width / 2;
-                                    const y = node.y - node.heigth / 2;
-                                    ctx.strokeStyle = node.type == 3 ? '#FF0000' : '#ADD8E6';
-                                    // 设置边框宽度  
-                                    ctx.lineWidth = 0.5;
-                                    ctx.moveTo(x + radius, y);
-                                    ctx.arcTo(x + node.width, y, x + node.width, y + node.heigth, radius);
-                                    ctx.arcTo(x + node.width, y + node.heigth, x, y + node.heigth, radius);
-                                    ctx.arcTo(x, y + node.heigth, x, y, radius);
-                                    ctx.arcTo(x, y, x + radius, y, radius);
-                                    ctx.stroke();
-                                    ctx.fillStyle = 'white'; // 矩形颜色  
-                                    ctx.fill();
-                                    // 添加文字  
-                                    ctx.fillStyle = '#000000'; // 文字颜色  
-                                    ctx.font = '12px Arial'; // 文字样式  
-                                    ctx.textAlign = 'left'; // 文字对齐方式  
-                                    const text = node.name ? node.name : '节点' + node.key;
-                                    if (text.length < 8) {
-                                        ctx.fillText(text, x + (5 * (8 - text.length)), y + 27);
-                                    } else if (text.length < 15) {
-                                        ctx.fillText(text.slice(0, 7), x + 8, y + 20);
-                                        const twoLine = text.slice(7, text.length);
-                                        ctx.fillText(twoLine, x + 8 + (5.7 * (7 - twoLine.length)), y + 38);
-                                    } else {
-                                        ctx.fillText(text.slice(0, 7), x + 8, y + 20);
-                                        const twoLine = text.slice(7, 13) + '...';
-                                        ctx.fillText(twoLine, x + 8, y + 38);
-                                    }
-                                    ctx.stroke();
-                                    if (node.isCheck) {
-                                        ctx.setLineDash([5, 5]);
+                                    break;
+                                case 3:
+                                case 4:
+                                    if (node.heigth && node.width) {
                                         ctx.beginPath();
-                                        ctx.rect(node.x - node.width / 2 - 2, node.y - node.heigth / 2 - 2, node.width + 4, node.width / 2 + 4);
-                                        ctx.strokeStyle = 'blue';
+                                        const radius = 20; // 圆角的大小 
+                                        const x = node.x - node.width / 2;
+                                        const y = node.y - node.heigth / 2;
+                                        ctx.strokeStyle = node.type == 3 ? '#FF0000' : '#ADD8E6';
+                                        // 设置边框宽度  
+                                        ctx.lineWidth = 0.5;
+                                        ctx.moveTo(x + radius, y);
+                                        ctx.arcTo(x + node.width, y, x + node.width, y + node.heigth, radius);
+                                        ctx.arcTo(x + node.width, y + node.heigth, x, y + node.heigth, radius);
+                                        ctx.arcTo(x, y + node.heigth, x, y, radius);
+                                        ctx.arcTo(x, y, x + radius, y, radius);
                                         ctx.stroke();
-                                        ctx.setLineDash([]);
+                                        ctx.fillStyle = 'white'; // 矩形颜色  
+                                        ctx.fill();
+                                        // 添加文字  
+                                        ctx.fillStyle = '#000000'; // 文字颜色  
+                                        ctx.font = '12px Arial'; // 文字样式  
+                                        ctx.textAlign = 'left'; // 文字对齐方式  
+                                        const text = node.name ? node.name : '节点' + node.key;
+                                        if (text.length < 8) {
+                                            ctx.fillText(text, x + (5 * (8 - text.length)), y + 27);
+                                        } else if (text.length < 15) {
+                                            ctx.fillText(text.slice(0, 7), x + 8, y + 20);
+                                            const twoLine = text.slice(7, text.length);
+                                            ctx.fillText(twoLine, x + 8 + (5.7 * (7 - twoLine.length)), y + 38);
+                                        } else {
+                                            ctx.fillText(text.slice(0, 7), x + 8, y + 20);
+                                            const twoLine = text.slice(7, 13) + '...';
+                                            ctx.fillText(twoLine, x + 8, y + 38);
+                                        }
+                                        ctx.stroke();
+                                        if (node.isCheck) {
+                                            ctx.setLineDash([5, 5]);
+                                            ctx.beginPath();
+                                            ctx.rect(node.x - node.width / 2 - 2, node.y - node.heigth / 2 - 2, node.width + 4, node.width / 2 + 4);
+                                            ctx.strokeStyle = 'blue';
+                                            ctx.stroke();
+                                            ctx.setLineDash([]);
+                                        }
                                     }
-                                }
-                                break;
-                            case 5:
-                                if (node.radius) {
-                                    ctx.lineWidth = 0.5;
-                                    ctx.strokeStyle = 'black';
-
-                                    // 开始绘制菱形路径  
-                                    ctx.beginPath();
-                                    ctx.moveTo(node.x, node.y - node.radius / 2);
-                                    ctx.lineTo(node.x + node.radius / 2, node.y);
-                                    ctx.lineTo(node.x, node.y + node.radius / 2);
-                                    ctx.lineTo(node.x - node.radius / 2, node.y);
-                                    ctx.closePath();
-                                    // 绘制边框  
-                                    ctx.stroke();
-                                    // 设置填充样式并填充颜色  
-                                    ctx.fillStyle = 'white';
-                                    ctx.fill();
-
-                                    // 设置填充样式并填充颜色  
-                                    ctx.beginPath();
-                                    ctx.fillStyle = 'black';
-                                    ctx.fill();
-                                    ctx.font = '18px Arial';
-                                    ctx.textAlign = 'center';
-                                    ctx.textBaseline = 'middle';
-                                    ctx.fillText('if', node.x, node.y + 2);
-                                    ctx.stroke();
-                                    if (node.isCheck) {
-                                        const halfSize = node.radius / 2 + 2;
-                                        ctx.setLineDash([5, 5]);
+                                    break;
+                                case 5:
+                                    if (node.radius) {
+                                        ctx.lineWidth = 0.5;
+                                        ctx.strokeStyle = 'black';
+                                        // 开始绘制菱形路径  
                                         ctx.beginPath();
-                                        ctx.rect(node.x - halfSize, node.y - halfSize, halfSize * 2, halfSize * 2);
-                                        ctx.strokeStyle = 'blue';
+                                        ctx.moveTo(node.x, node.y - node.radius / 2);
+                                        ctx.lineTo(node.x + node.radius / 2, node.y);
+                                        ctx.lineTo(node.x, node.y + node.radius / 2);
+                                        ctx.lineTo(node.x - node.radius / 2, node.y);
+                                        ctx.closePath();
+                                        // 绘制边框  
                                         ctx.stroke();
-                                        ctx.setLineDash([]);
+                                        // 设置填充样式并填充颜色  
+                                        ctx.fillStyle = 'white';
+                                        ctx.fill();
+                                        // 设置填充样式并填充颜色  
+                                        ctx.beginPath();
+                                        ctx.fillStyle = 'black';
+                                        ctx.fill();
+                                        ctx.font = '18px Arial';
+                                        ctx.textAlign = 'center';
+                                        ctx.textBaseline = 'middle';
+                                        ctx.fillText('if', node.x, node.y + 2);
+                                        ctx.stroke();
+                                        if (node.isCheck) {
+                                            const halfSize = node.radius / 2 + 2;
+                                            ctx.setLineDash([5, 5]);
+                                            ctx.beginPath();
+                                            ctx.rect(node.x - halfSize, node.y - halfSize, halfSize * 2, halfSize * 2);
+                                            ctx.strokeStyle = 'blue';
+                                            ctx.stroke();
+                                            ctx.setLineDash([]);
+                                        }
                                     }
-                                }
-                                break
-                            case 6:
-                                if (node.endPoint) {
-                                    // 设置虚线样式  
-                                    ctx.setLineDash([5, 5]); // 第一个数字是实线部分长度，第二个数字是间隔长度  
-                                    ctx.lineDashOffset = 0; // 虚线偏移量  
-                                    ctx.lineWidth = 2; // 线条宽度  
-                                    const x2 = node.x;
-                                    const y2 = node.y;
-                                    const x1 = node.endPoint.x;
-                                    const y1 = node.endPoint.y;
-                                    const dx = x2 - x1;
-                                    const dy = y2 - y1;
-                                    const distanceP1P2 = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-                                    const ratio = 20 / distanceP1P2;
-                                    const p3 = { x: x1 + (x2 - x1) * ratio, y: y1 + (y2 - y1) * ratio };
-                                    const unitX = dx / distanceP1P2;
-                                    const unitY = dy / distanceP1P2;
-                                    const nx = -dy / distanceP1P2;
-                                    const ny = dx / distanceP1P2;
-                                    const p4 = { x: p3.x + nx * 5, y: p3.y + ny * 5 };
-                                    const p5 = { x: p3.x - nx * 5, y: p3.y - ny * 5 };
-                                    const p6 = { x: x1 + unitX * 5, y: y1 + unitY * 5 };
-
-                                    // 绘制箭头主体（直线）  
-                                    ctx.beginPath();
-                                    ctx.moveTo(node.x, node.y);
-                                    ctx.lineTo(p6.x, p6.y);
-                                    ctx.stroke();
-
-
-                                    // 计算顶点p1到中垂线起点p2的向量  
-
-                                    ctx.setLineDash([]);
-                                    ctx.beginPath();
-
-                                    ctx.moveTo(node.endPoint.x, node.endPoint.y);
-                                    ctx.lineTo(p4.x, p4.y);
-                                    ctx.lineTo(p5.x, p5.y);
-                                    ctx.closePath();
-                                    ctx.fillStyle = 'black'; // 箭头颜色  
-                                    ctx.fill();
-                                    // 重置虚线样式，如果之后还需要绘制实线或其他虚线样式  
-
-                                } else {
-                                    if (node.ponits) {
-                                        const ponits = node.ponits;
+                                    break
+                                case 6:
+                                    if (node.endPoint) {
+                                        // 设置虚线样式  
+                                        ctx.setLineDash([5, 5]); // 第一个数字是实线部分长度，第二个数字是间隔长度  
+                                        ctx.lineDashOffset = 0; // 虚线偏移量  
                                         ctx.lineWidth = 2; // 线条宽度  
-                                        ctx.strokeStyle = node.isCheck ? 'red' : 'black',
-                                            ctx.beginPath();
-                                        ctx.moveTo(ponits.start.x, ponits.start.y);
-                                        if (ponits.center) {
-                                            ponits.center.map(n => {
-                                                ctx.lineTo(n.x, n.y);
-                                            })
-                                        }
-                                        ctx.lineTo(ponits.end.x, ponits.end.y);
+                                        const x2 = node.x;
+                                        const y2 = node.y;
+                                        const x1 = node.endPoint.x;
+                                        const y1 = node.endPoint.y;
+                                        const dx = x2 - x1;
+                                        const dy = y2 - y1;
+                                        const distanceP1P2 = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+                                        const ratio = 20 / distanceP1P2;
+                                        const p3 = { x: x1 + (x2 - x1) * ratio, y: y1 + (y2 - y1) * ratio };
+                                        const unitX = dx / distanceP1P2;
+                                        const unitY = dy / distanceP1P2;
+                                        const nx = -dy / distanceP1P2;
+                                        const ny = dx / distanceP1P2;
+                                        const p4 = { x: p3.x + nx * 5, y: p3.y + ny * 5 };
+                                        const p5 = { x: p3.x - nx * 5, y: p3.y - ny * 5 };
+                                        const p6 = { x: x1 + unitX * 5, y: y1 + unitY * 5 };
+
+                                        // 绘制箭头主体（直线）  
+                                        ctx.beginPath();
+                                        ctx.moveTo(node.x, node.y);
+                                        ctx.lineTo(p6.x, p6.y);
                                         ctx.stroke();
-                                        if (ponits.arrow) {
-                                            ctx.beginPath();
-                                            ctx.lineWidth = 2;
-                                            ctx.moveTo(ponits.arrow[0].x, ponits.arrow[0].y);
-                                            ctx.lineTo(ponits.arrow[1].x, ponits.arrow[1].y);
-                                            ctx.lineTo(ponits.arrow[2].x, ponits.arrow[2].y);
-                                            ctx.closePath();
-                                            ctx.fillStyle = node.isCheck ? 'red' : 'black', // 箭头颜色  
-                                                ctx.fill();
+                                        // 计算顶点p1到中垂线起点p2的向量  
+                                        ctx.setLineDash([]);
+                                        ctx.beginPath();
+                                        ctx.moveTo(node.endPoint.x, node.endPoint.y);
+                                        ctx.lineTo(p4.x, p4.y);
+                                        ctx.lineTo(p5.x, p5.y);
+                                        ctx.closePath();
+                                        ctx.fillStyle = 'black'; // 箭头颜色  
+                                        ctx.fill();
+                                        // 重置虚线样式，如果之后还需要绘制实线或其他虚线样式  
+
+                                    } else {
+                                        if (node.ponits && node.endNode) {
+                                            const ponits = node.ponits;
+                                            const endNode = nodes[node.endNode]
+                                            ctx.lineWidth = 2; // 线条宽度  
+                                            ctx.strokeStyle = node.isCheck ? 'blue' : (endNode?.ifCondition ? 'green' : 'black'),
+                                                ctx.beginPath();
+                                            ctx.moveTo(ponits.start.x, ponits.start.y);
+                                            if (ponits.center) {
+                                                ponits.center.map(n => {
+                                                    ctx.lineTo(n.x, n.y);
+                                                })
+                                            }
+                                            ctx.lineTo(ponits.end.x, ponits.end.y);
+                                            ctx.stroke();
+                                            if (ponits.arrow) {
+                                                ctx.beginPath();
+                                                ctx.lineWidth = 2;
+                                                ctx.moveTo(ponits.arrow[0].x, ponits.arrow[0].y);
+                                                ctx.lineTo(ponits.arrow[1].x, ponits.arrow[1].y);
+                                                ctx.lineTo(ponits.arrow[2].x, ponits.arrow[2].y);
+                                                ctx.closePath();
+                                                ctx.fillStyle = node.isCheck ? 'blue' : (endNode?.ifCondition ? 'green' : 'black'), // 箭头颜色  
+                                                    ctx.fill();
+                                            }
                                         }
                                     }
-                                }
-                                break;
+                                    break;
+                            }
                         }
-                    }
-                })
+                    })
+                }
             }
         }
-
 
     }, [nodes])
 
@@ -506,7 +525,7 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
         }
         if (canvas) {
             const rect = canvas.getBoundingClientRect();
-            const key = Object.values(nodes).length + 1;
+            const key = findNewKey(nodes);
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             switch (checkButton) {
@@ -611,16 +630,31 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
     const handleKeyDown = (event: any) => {
         if (event.key === 'Delete' && checkNode) {
             nodes[checkNode] = undefined
+            Object.values(nodes).map(node => {
+                if (node?.type === 6 && (node.startNode == checkNode || node.endNode == checkNode)) {
+                    nodes[node.key] = undefined;
+                }
+            })
             setNodes({ ...nodes })
         }
     };
 
     useEffect(() => {
+
         document.addEventListener('keydown', handleKeyDown);
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [checkNode]);
+
+
+    useEffect(() => {
+        if (prop.nodes) {
+            setNodes(JSON.parse(prop.nodes))
+        } else {
+            setNodes({})
+        }
+    }, [prop.nodes]);
 
     const onMouseUp = (e: MouseEvent) => {
         if (e.button === 0) {
@@ -688,16 +722,6 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
                 break;
         }
 
-    }
-    const typeStr = (type: number) => {
-        switch (type) {
-            case 1: return '开始节点';
-            case 2: return '结束节点';
-            case 3: return '任务节点';
-            case 4: return '子流程节点';
-            case 5: return '决策节点';
-            case 6: return '连接线';
-        }
     }
     const { confirm } = Modal;
 
@@ -803,8 +827,8 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
                                 <Select.Option value={1}>开始节点</Select.Option>
                                 <Select.Option value={2}>结束节点</Select.Option>
                                 <Select.Option value={3}>任务节点</Select.Option>
-                                <Select.Option value={4}>决策节点</Select.Option>
-                                <Select.Option value={5}>子流程节点</Select.Option>
+                                <Select.Option value={5}>决策节点</Select.Option>
+                                <Select.Option value={4}>子流程节点</Select.Option>
                                 <Select.Option value={6}>连接线</Select.Option>
                             </Select>
                         </Form.Item>
@@ -814,17 +838,7 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
                                     name={'userIds'}
                                     label={'节点用户'}
                                     style={{ marginBottom: '2px' }}
-                                    rules={[({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            const node = nodes[checkNode];
-                                            if (node && (node.type == 3 || node.type == 4 || node.type == 5)) {
-                                                if (!value && !getFieldValue('jobIds')) {
-                                                    return Promise.reject('该节点必须绑定用户或者岗位');
-                                                }
-                                            }
-                                            return Promise.resolve();
-                                        }
-                                    })]}
+
                                 >
                                     <TreeSelect disabled onClick={() => {
                                         setSelectMadolOpen(true)
@@ -841,14 +855,34 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
                                         selectFrom.setFieldsValue(form.getFieldsValue());
                                     }} treeData={prop.jobs} treeCheckable style={{ width: '120px', height: '24px' }} />
                                 </Form.Item>
+
+                                {nodes[checkNode]?.type === 4 && <Form.Item
+                                    name={'childWorkflowId'}
+                                    label={'子流程'}
+                                    style={{ marginBottom: '2px' }}
+                                >
+                                    <TreeSelect disabled onClick={() => {
+                                        setSelectMadolOpen(true)
+                                        selectFrom.setFieldsValue(form.getFieldsValue());
+                                    }} treeData={prop.workfolws} treeCheckable style={{ width: '120px', height: '24px' }} />
+                                </Form.Item>}
                                 {nodes[checkNode]?.type !== 1 && <Form.Item
-                                    name={'isReturn'}
+                                    name={'ifReturn'}
                                     label={'支持回退'}
                                     style={{ marginBottom: '2px' }}
                                 >
                                     <Switch />
                                 </Form.Item>}
+
                             </div>}
+                        {(nodes[checkNode]?.type === 2 || nodes[checkNode]?.type === 3 ||
+                            nodes[checkNode]?.type === 4) && <Form.Item
+                                name={'ifCondition'}
+                                label={'条件通过'}
+                                style={{ marginBottom: '2px' }}
+                            >
+                                <Switch />
+                            </Form.Item>}
                     </Form>}
                     {(nodes[checkNode]?.type === 1 || nodes[checkNode]?.type === 2 || nodes[checkNode]?.type === 3 ||
                         nodes[checkNode]?.type === 4 || nodes[checkNode]?.type === 5) && <div style={{ display: 'flex', justifyContent: 'flex-end' }}><Button type='primary' onClick={() => {
@@ -900,11 +934,19 @@ const WorkflowEdit: React.FC<WorkflowEditProps> = (prop: WorkflowEditProps) => {
                 >
                     <TreeSelect showSearch treeData={prop.jobs} treeNodeFilterProp="title" treeCheckable />
                 </Form.Item>
+
+                {nodes[checkNode]?.type === 4 && <Form.Item
+                    name={'childWorkflowId'}
+                    label={'子流程'}
+                >
+                    <TreeSelect showSearch treeData={prop.workfolws} treeNodeFilterProp="title"  />
+                </Form.Item>}
             </Form>
         </Modal>
     </Row>
     )
-}
+})
+
 export default WorkflowEdit;
 
 

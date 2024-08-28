@@ -85,6 +85,13 @@ public final class JsonUtils {
         return null;
     }
 
+    public static <K,T> Map<K,T> toMap(String str, Type type) {
+        if (str != null && str.trim().length() > 0) {
+            return gson.fromJson(str, type);
+        }
+        return null;
+    }
+
     public static <T> List<T> toObjList(List<String> list, Class<T> clazz) {
         List<T> re = new ArrayList<>(list.size());
         list.forEach(i -> re.add(gson.fromJson(i, clazz)));
