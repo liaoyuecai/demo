@@ -196,7 +196,7 @@ const Login: React.FC = () => {
             label={'重复密码'}
             rules={[{ required: true, message: '重复密码不能为空', },
             ({ getFieldValue }) => ({
-              validator(role, value) {
+              validator(_, value) {
                 if (value !== getFieldValue('password')) {
                   return Promise.reject('两次密码不一致');
                 }

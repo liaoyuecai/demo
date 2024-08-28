@@ -37,6 +37,9 @@ public class ApiHttpRequest<T> implements Serializable {
 
     @Override
     public String toString() {
-        return JsonUtils.toJsonStr(this);
+        if (this.data!=null)
+            return "traceId="+traceId + ",data="+JsonUtils.toJsonStr(this.data);
+        else
+            return "traceId="+traceId + ",data=null";
     }
 }
