@@ -1,5 +1,6 @@
 package com.demo.workflow.datasource.dto;
 
+import com.demo.workflow.datasource.entity.WorkflowNodeInput;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +16,10 @@ public class WorkflowSaveNode {
     private Integer childWorkflowId;
     private String name;
     private List<Integer> userIds;
+    private List<Integer> ccUserIds;
     private List<Integer> jobIds;
-    private boolean ifReturn;
-    private boolean ifCondition;
+    private List<WorkflowNodeInput> inputs;
+    private boolean isReturn;
+    private boolean isCondition;
+    private boolean isUploadFile;
 }

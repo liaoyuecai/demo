@@ -1,10 +1,15 @@
 
-import { DragOutlined, ExclamationCircleFilled, ExpandAltOutlined, } from '@ant-design/icons';
-import { Button, Col, Form, Input, message, Modal, Row, Select, Switch, Tooltip, TreeSelect } from 'antd';
+import { DeleteOutlined, DragOutlined, ExclamationCircleFilled, ExpandAltOutlined, SettingOutlined, } from '@ant-design/icons';
+import { Button, Col, Form, Input, message, Modal, Row, Select, Space, Switch, Tooltip, TreeSelect } from 'antd';
 
 
 import React, { forwardRef, MouseEvent, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
+export type InputNode = {
+    inputTitle?: string;
+    inputNecessary?: boolean;//是否必须填写
+    inputType?: 0 | 1 | 2;//0 时间 1 input 2 text
+}
 
 type Node = {
     key: number;//标识
@@ -17,12 +22,15 @@ type Node = {
     heigth?: number;//高
     childWorkflowId?: number;//子流程id
     userIds?: number[];//绑定用户
+    ccUserIds?: number[];//抄送人
     jobIds?: number[];//绑定岗位
     isCheck: boolean;//是否选中
     startNode?: number;//开始节点--作连接线时使用
     endNode?: number;//结束节点--作连接线时使用
-    ifReturn?: boolean;
-    ifCondition?: boolean;
+    isReturn?: boolean;
+    isUploadFile?: boolean;
+    inputs?: InputNode[];
+    isCondition?: boolean;
     //连接线线路
     ponits?: { start: { x: number, y: number }, center?: { x: number, y: number }[], end: { x: number, y: number }, arrow?: { x: number, y: number }[] };
     endPoint?: { x: number, y: number };//结束点--作连接线未完成画虚线时使用
@@ -39,12 +47,22 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
     const [checkButton, setCheckButton] = useState<number>();
     const [checkNode, setCheckNode] = useState<number>(0);
     const [currentConnetLine, setCurrentConnetLine] = useState<number>(0);
+    const [currentInputNodes, setCurrentInputNodes] = useState<InputNode[]>([]);
     const [mouseDown, setMouseDown] = useState<boolean>(false);
     const [selectFrom] = Form.useForm();
+    const [inputFrom] = Form.useForm();
     const [selectMadolOpen, setSelectMadolOpen] = useState<boolean>(false);
+    const [inputMadolOpen, setInputMadolOpen] = useState<boolean>(false);
 
     useImperativeHandle(ref, () => ({
-        nodes: nodes
+        nodes: nodes,
+        reset: ()=>{
+            setNodes({})
+            setCheckButton(undefined)
+            setCheckNode(0)
+            setCurrentConnetLine(0)
+            setCurrentInputNodes([])
+        }
     }));
     /**
      * 检查鼠标是否点击到线段
@@ -482,7 +500,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                                             const ponits = node.ponits;
                                             const endNode = nodes[node.endNode]
                                             ctx.lineWidth = 2; // 线条宽度  
-                                            ctx.strokeStyle = node.isCheck ? 'blue' : (endNode?.ifCondition ? 'green' : 'black'),
+                                            ctx.strokeStyle = node.isCheck ? 'blue' : (endNode?.isCondition ? 'green' : 'black'),
                                                 ctx.beginPath();
                                             ctx.moveTo(ponits.start.x, ponits.start.y);
                                             if (ponits.center) {
@@ -499,7 +517,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                                                 ctx.lineTo(ponits.arrow[1].x, ponits.arrow[1].y);
                                                 ctx.lineTo(ponits.arrow[2].x, ponits.arrow[2].y);
                                                 ctx.closePath();
-                                                ctx.fillStyle = node.isCheck ? 'blue' : (endNode?.ifCondition ? 'green' : 'black'), // 箭头颜色  
+                                                ctx.fillStyle = node.isCheck ? 'blue' : (endNode?.isCondition ? 'green' : 'black'), // 箭头颜色  
                                                     ctx.fill();
                                             }
                                         }
@@ -569,7 +587,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                     }
                     break
                 case 5:
-                    nodes[key] = { key, type: checkButton, name: '决策节点', x, y, isCheck: false, radius: 40 };
+                    nodes[key] = { key, type: checkButton, name: '审批', x, y, isCheck: false, radius: 40 };
                     setNodes({ ...nodes })
                     break
                 case 6:
@@ -640,7 +658,6 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
     };
 
     useEffect(() => {
-
         document.addEventListener('keydown', handleKeyDown);
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
@@ -743,7 +760,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
     }
     return (<Row gutter={24}>
         <Col span={6}>
-            <div style={{ border: '2px solid #000', borderRadius: '15px', padding: '10px', backgroundColor: '#e7e6e6', height: '400px', width: '100%' }}>
+            <div style={{ border: '2px solid #000', borderRadius: '15px', padding: '10px', backgroundColor: '#e7e6e6', height: '500px', width: '100%' }}>
                 <div style={{
                     width: '100%', height: '120px', padding: '3px', display: 'grid', gap: '1px', backgroundColor: 'white',
                     gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(3, 1fr)'
@@ -782,7 +799,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                     </Tooltip>
                 </div>
                 <div style={{
-                    width: '100%', height: '255px', padding: '3px', display: 'flex', gap: '1px', backgroundColor: 'white',
+                    width: '100%', height: '355px', padding: '3px', display: 'flex', gap: '1px', backgroundColor: 'white',
                     flexDirection: 'column',
                     borderTop: '1.5px solid #000'
                 }}>
@@ -794,6 +811,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                         nodes[checkNode] = { ...nodes[checkNode], ...val }
                         message.info('节点属性保存成功');
                         setNodes({ ...nodes })
+                        setCurrentInputNodes([])
                     }}
                     >
                         <Form.Item
@@ -846,6 +864,17 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                                     }} treeData={prop.users} treeCheckable style={{ width: '120px', height: '24px' }} />
                                 </Form.Item>
                                 <Form.Item
+                                    name={'ccUserIds'}
+                                    label={'添加抄送'}
+                                    style={{ marginBottom: '2px' }}
+
+                                >
+                                    <TreeSelect disabled onClick={() => {
+                                        setSelectMadolOpen(true)
+                                        selectFrom.setFieldsValue(form.getFieldsValue());
+                                    }} treeData={prop.users} treeCheckable style={{ width: '120px', height: '24px' }} />
+                                </Form.Item>
+                                <Form.Item
                                     name={'jobIds'}
                                     label={'节点岗位'}
                                     style={{ marginBottom: '2px' }}
@@ -866,8 +895,32 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                                         selectFrom.setFieldsValue(form.getFieldsValue());
                                     }} treeData={prop.workfolws} treeCheckable style={{ width: '120px', height: '24px' }} />
                                 </Form.Item>}
+
+                                {nodes[checkNode]?.type == 3 && <Space.Compact><Form.Item
+                                    name={'inputs'}
+                                    label={'配置输入'}
+                                    style={{ marginBottom: '2px' }}
+                                >
+                                    <Input disabled style={{ width: '95px' }} />
+                                </Form.Item>
+                                    <Button style={{ height: '23.5px', marginTop: '0.5px' }} onClick={() => {
+                                        const inputFromValues: any = {};
+                                        if (nodes[checkNode]?.inputs) {
+                                            setCurrentInputNodes(nodes[checkNode].inputs)
+                                            nodes[checkNode].inputs.map((node, index) => {
+                                                const key = 'key' + index;
+                                                inputFromValues[key] = node;
+                                            })
+                                        } else {
+                                            setCurrentInputNodes([])
+                                        }
+                                        inputFrom.resetFields();
+                                        setInputMadolOpen(true)
+                                        inputFrom.setFieldsValue(inputFromValues)
+
+                                    }} icon={<SettingOutlined />} /></Space.Compact>}
                                 {nodes[checkNode]?.type !== 1 && <Form.Item
-                                    name={'ifReturn'}
+                                    name={'isReturn'}
                                     label={'支持回退'}
                                     style={{ marginBottom: '2px' }}
                                 >
@@ -877,8 +930,16 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                             </div>}
                         {(nodes[checkNode]?.type === 2 || nodes[checkNode]?.type === 3 ||
                             nodes[checkNode]?.type === 4) && <Form.Item
-                                name={'ifCondition'}
+                                name={'isCondition'}
                                 label={'条件通过'}
+                                style={{ marginBottom: '2px' }}
+                            >
+                                <Switch />
+                            </Form.Item>}
+                        {(nodes[checkNode]?.type === 5 || nodes[checkNode]?.type === 3)
+                            && <Form.Item
+                                name={'isUploadFile'}
+                                label={'上传附件'}
                                 style={{ marginBottom: '2px' }}
                             >
                                 <Switch />
@@ -897,7 +958,7 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                 onMouseUp={onMouseUp}
                 ref={canvasRef}
                 width='700px'
-                height='400px'
+                height='500px'
                 style={{ border: '2px solid #000', borderRadius: '15px' }}
 
             />
@@ -919,10 +980,21 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
         >
             <Form form={selectFrom} onFinish={(val) => {
                 form.setFieldsValue({ ...form.getFieldsValue(), ...val });
+                if (checkNode && nodes[checkNode]){
+                    nodes[checkNode] = {...nodes[checkNode],...val}
+                    setNodes({...nodes})
+                }
                 setSelectMadolOpen(false);
             }}>
                 <Form.Item
                     name={'userIds'}
+                    label={'节点用户'}
+
+                >
+                    <TreeSelect showSearch treeData={prop.users} treeNodeFilterProp="title" treeCheckable />
+                </Form.Item>
+                <Form.Item
+                    name={'ccUserIds'}
                     label={'节点用户'}
 
                 >
@@ -939,14 +1011,77 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                     name={'childWorkflowId'}
                     label={'子流程'}
                 >
-                    <TreeSelect showSearch treeData={prop.workfolws} treeNodeFilterProp="title"  />
+                    <TreeSelect showSearch treeData={prop.workfolws} treeNodeFilterProp="title" />
                 </Form.Item>}
             </Form>
+        </Modal>
+        <Modal title={<div>输入控制 <Button type='primary' size='small'
+            onClick={() => { setCurrentInputNodes([...currentInputNodes, {}]) }}
+        >+</Button></div>} open={inputMadolOpen} onOk={() => { inputFrom.submit() }}
+            onCancel={() => {
+                confirm({
+                    title: '确定要取消吗？',
+                    icon: <ExclamationCircleFilled />,
+                    content: '您的更改尚未保存，确定要离开吗？',
+                    onOk() {
+                        setInputMadolOpen(false)
+                    },
+                    onCancel() {
+                    },
+                });
+
+            }}
+        >
+            {currentInputNodes && <Form form={inputFrom} onFinish={(val) => {
+                form.setFieldsValue({ ...form.getFieldsValue(), inputs: Object.values(val) });
+                if (checkNode && nodes[checkNode]){
+                    nodes[checkNode].inputs = Object.values(val);
+                    setNodes({...nodes})
+                }
+                setInputMadolOpen(false);
+            }}>
+                {currentInputNodes.map((_, index) => {
+                    return <Form.Item label={"输入" + index} style={{ marginBottom: '10px' }}>
+                        <Space.Compact>
+                            <Form.Item
+                                name={['key' + index, 'inputNecessary']}
+                                rules={[{ required: true, message: '请选择是否必填' }]}
+                                style={{ marginBottom: '1px' }}
+                            >
+                                <Select placeholder={'是否必填'} style={{ width: '100px', height: '30px' }}>
+                                    <Select.Option value={0}>否</Select.Option>
+                                    <Select.Option value={1}>是</Select.Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item
+                                name={['key' + index, 'inputType']}
+                                style={{ marginBottom: '1px' }}
+                                rules={[{ required: true, message: '请选择类型' }]}
+                            >
+                                <Select placeholder='选择类型' style={{ width: '100px', height: '30px' }}>
+                                    <Select.Option value={0}>日期时间</Select.Option>
+                                    <Select.Option value={1}>输入框</Select.Option>
+                                    <Select.Option value={2}>长文本</Select.Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item
+                                name={['key' + index, 'inputTitle']}
+                                style={{ marginBottom: '1px' }}
+                                rules={[{ required: true, message: '请填写标题' }]}
+                            >
+                                <Input placeholder='标题' style={{ width: '180px', height: '30px' }} />
+                            </Form.Item>
+                            <Button danger icon={<DeleteOutlined />} onClick={() => {
+                                currentInputNodes.splice(index, 1)
+                                setCurrentInputNodes([...currentInputNodes])
+                            }} style={{ height: '30px', marginTop: '1px' }} />
+                        </Space.Compact>
+                    </Form.Item>
+                })}
+            </Form>}
         </Modal>
     </Row>
     )
 })
 
 export default WorkflowEdit;
-
-
