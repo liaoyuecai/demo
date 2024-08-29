@@ -17,8 +17,9 @@ public class WorkflowNode {
     private Integer workflowId;
     private Integer childWorkflowId;
     private Integer parentId;
-    private Integer ifCondition;
-    private Integer ifReturn;
+    private Integer isCondition;
+    private Integer isReturn;
+    private Integer isUploadFile;
     private String nodeName;
     private Integer nodeType;
     private Integer deleted;

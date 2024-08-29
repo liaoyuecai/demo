@@ -271,10 +271,22 @@ CREATE TABLE `workflow_node` (
   `workflow_id` int(11) NOT NULL   COMMENT '流程id',
   `parent_id` int(11)  COMMENT '上级节点',
   `child_workflow_id` int(11)  COMMENT '子流程id，当节点为子流程节点时生效',
-  `if_return` int(11)  COMMENT '是否可以回退',
-  `if_condition` int(1)  COMMENT '判断条件：当上级节点为决策节点时，字段值0为假，1为真',
+  `is_return` int(11)  COMMENT '是否可以回退',
+  `is_upload_file` int(11)  COMMENT '是否可以上传附件',
+  `is_condition` int(1)  COMMENT '判断条件：当上级节点为决策节点时，字段值0为假，1为真',
   `node_name` varchar(20) NOT NULL COMMENT '节点名称',
   `node_type` smallint(2) NOT NULL COMMENT '节点类型 1开始，2结束，3任务节点，4子流程节点，5决策节点',
+  `deleted` smallint(1) DEFAULT '0' COMMENT '删除状态',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点表';
+
+DROP TABLE IF EXISTS `workflow_node_input`;
+CREATE TABLE `workflow_node_input` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `node_id` int(11) NOT NULL   COMMENT '流程节点id',
+  `input_necessary` int(1) NOT NULL COMMENT '是否必填：0否 1是',
+  `input_title` varchar(20) NOT NULL COMMENT '输入名称',
+  `input_type` smallint(2) NOT NULL COMMENT '输入类型 0 时间 1 input 2 text',
   `deleted` smallint(1) DEFAULT '0' COMMENT '删除状态',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点表';

@@ -7,12 +7,10 @@ import com.demo.core.service.CURDService;
 import com.demo.core.utils.JsonUtils;
 import com.demo.sys.datasource.dao.SysUserRepository;
 import com.demo.sys.datasource.dto.SimpleUserDto;
-import com.demo.workflow.datasource.dao.WorkflowNodeRepository;
-import com.demo.workflow.datasource.dao.WorkflowRecordRepository;
+import com.demo.workflow.datasource.dao.*;
 import com.demo.workflow.datasource.dto.WorkflowRecordDto;
 import com.demo.workflow.datasource.dto.WorkflowSaveNode;
-import com.demo.workflow.datasource.entity.WorkflowNode;
-import com.demo.workflow.datasource.entity.WorkflowRecord;
+import com.demo.workflow.datasource.entity.*;
 import com.google.gson.reflect.TypeToken;
 import jakarta.annotation.Resource;
 import jakarta.transaction.Transactional;
@@ -30,6 +28,14 @@ public class WorkflowRecordService extends CURDService<WorkflowRecord, WorkflowR
 
     @Resource
     WorkflowNodeRepository nodeRepository;
+    @Resource
+    WorkflowNodeUserRepository nodeUserRepository;
+    @Resource
+    WorkflowNodeCCUserRepository nodeCCUserRepository;
+    @Resource
+    WorkflowNodeJobRepository nodeJobRepository;
+    @Resource
+    WorkflowNodeInputRepository nodeInputRepository;
 
     public WorkflowRecordService(@Autowired WorkflowRecordRepository repository) {
         super(repository);
@@ -39,7 +45,6 @@ public class WorkflowRecordService extends CURDService<WorkflowRecord, WorkflowR
     public List<SimpleUserDto> findUsers() {
         return userRepository.findSimpleUsersDto();
     }
-
 
 
     public List<WorkflowRecordDto> findRecordsDto() {
@@ -72,14 +77,7 @@ public class WorkflowRecordService extends CURDService<WorkflowRecord, WorkflowR
                             throw new GlobalException(ErrorCode.PARAMS_ERROR_WORKFLOW_NODE_ERROR);
                         startNode.set(n.getKey());
                     }
-                    WorkflowNode node = new WorkflowNode();
-                    node.setWorkflowId(record.getId());
-                    node.setNodeName(n.getName());
-                    node.setNodeType(n.getType());
-                    node.setChildWorkflowId(n.getChildWorkflowId());
-                    node.setDeleted(0);
-                    node.setIfCondition(n.isIfCondition() ? 1 : 0);
-                    node.setIfReturn(n.isIfReturn() ? 1 : 0);
+                    WorkflowNode node = getInitWorkflowNode(n, record);
                     list.add(node);
                     nodeMap.put(n.getKey(), node);
                     break;
@@ -114,7 +112,7 @@ public class WorkflowRecordService extends CURDService<WorkflowRecord, WorkflowR
                             ifNodeValue.put(parent.getId(), 0);
                             ifNodeNumber.put(parent.getId(), 0);
                         }
-                        ifNodeValue.put(parent.getId(), ifNodeValue.get(parent.getId()) + node.getIfCondition());
+                        ifNodeValue.put(parent.getId(), ifNodeValue.get(parent.getId()) + node.getIsCondition());
                         ifNodeNumber.put(parent.getId(), ifNodeNumber.get(parent.getId()) + 1);
                     }
                 } else {
@@ -128,6 +126,47 @@ public class WorkflowRecordService extends CURDService<WorkflowRecord, WorkflowR
         });
         //保存父节点id
         nodeRepository.saveAll(list);
+        //保存节点绑定的用户、岗位、抄送、输入
+        List<WorkflowNodeUser> nodeUsers = new ArrayList<>();
+        List<WorkflowNodeCCUser> nodeCCUsers = new ArrayList<>();
+        List<WorkflowNodeInput> nodeInputs = new ArrayList<>();
+        List<WorkflowNodeJob> nodeJobs = new ArrayList<>();
+        nodes.forEach(n -> {
+            switch (n.getType()) {
+                case 1, 2, 3, 4, 5:
+                    WorkflowNode node = nodeMap.get(n.getKey());
+                    if (node!=null){
+                        if (n.getUserIds()!=null && !n.getUserIds().isEmpty())
+                            n.getUserIds().forEach(i->nodeUsers.add(new WorkflowNodeUser(node.getId(),i)));
+                        if (n.getCcUserIds()!=null && !n.getCcUserIds().isEmpty())
+                            n.getUserIds().forEach(i->nodeCCUsers.add(new WorkflowNodeCCUser(node.getId(),i)));
+                        if (n.getJobIds()!=null && !n.getJobIds().isEmpty())
+                            n.getUserIds().forEach(i->nodeJobs.add(new WorkflowNodeJob(node.getId(),i)));
+                        if (n.getInputs()!=null && !n.getInputs().isEmpty()){
+                            n.getInputs().forEach(i->i.setNodeId(node.getId()));
+                            nodeInputs.addAll(n.getInputs());
+                        }
+                    }
+                    break;
+            }
+        });
+        if (!nodeUsers.isEmpty()) nodeUserRepository.saveAll(nodeUsers);
+        if (!nodeCCUsers.isEmpty()) nodeCCUserRepository.saveAll(nodeCCUsers);
+        if (!nodeJobs.isEmpty()) nodeJobRepository.saveAll(nodeJobs);
+        if (!nodeInputs.isEmpty()) nodeInputRepository.saveAll(nodeInputs);
         return record;
+    }
+
+    private WorkflowNode getInitWorkflowNode(WorkflowSaveNode n, WorkflowRecord record) {
+        WorkflowNode node = new WorkflowNode();
+        node.setWorkflowId(record.getId());
+        node.setNodeName(n.getName());
+        node.setNodeType(n.getType());
+        node.setChildWorkflowId(n.getChildWorkflowId());
+        node.setDeleted(0);
+        node.setIsCondition(n.isCondition() ? 1 : 0);
+        node.setIsReturn(n.isReturn() ? 1 : 0);
+        node.setIsUploadFile(n.isUploadFile() ? 1 : 0);
+        return node;
     }
 }

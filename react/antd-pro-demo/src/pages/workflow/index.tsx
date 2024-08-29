@@ -5,7 +5,7 @@ import {
   PageContainer,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button,  Input, message, Modal, Popconfirm, Row, Switch} from 'antd';
+import { Button, Input, message, Modal, Popconfirm, Row, Switch } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import WorkflowEdit from './update'
 import { set } from 'lodash';
@@ -27,19 +27,19 @@ const Page: React.FC = () => {
   const actionRef = useRef<ActionType>();
 
 
-  const editer = useRef<{ nodes: any[]}>();
+  const editer = useRef<{ nodes: any[], reset: () => void }>();
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<any>([]);
   const [currentNodes, setCurrentNodes] = useState<string>();
 
-  const [workflowTreeData,setWorkflowTreeData] = useState<API.TreeNode<any>[]>([]);
+  const [workflowTreeData, setWorkflowTreeData] = useState<API.TreeNode<any>[]>([]);
 
-  const reloadWorkflowTreeData = ()=>{
-    post<{id:number,workflowName:string}[]>('/workflow/record/findRecords').then(data=>{
+  const reloadWorkflowTreeData = () => {
+    post<{ id: number, workflowName: string }[]>('/workflow/record/findRecords').then(data => {
       if (data.code === 0 && data.data) {
-        const nodes:API.TreeNode<any>[] = [];
-        data.data.map(d=>{
-          nodes.push({key:d.id,title:d.workflowName,value:d.id})
+        const nodes: API.TreeNode<any>[] = [];
+        data.data.map(d => {
+          nodes.push({ key: d.id, title: d.workflowName, value: d.id })
         })
         setWorkflowTreeData(nodes)
       }
@@ -62,9 +62,9 @@ const Page: React.FC = () => {
     })
     post<API.TreeNode<any>[]>('/user/findDeptAndJobs').then((data) => {
       if (data.code === 0 && data.data) {
-        setJobTreeData([{ key: -1, value: -1, title: '上一节点处理人直属上级' }, 
-          { key: -2, value: -2, title: '上一节点处理人部门负责人' }, 
-          ...data.data])
+        setJobTreeData([{ key: -1, value: -1, title: '上一节点处理人直属上级' },
+        { key: -2, value: -2, title: '上一节点处理人部门负责人' },
+        ...data.data])
       }
     })
   }, [])
@@ -113,12 +113,13 @@ const Page: React.FC = () => {
   ];
   const { confirm } = Modal;
 
-  const saveSuccess = ()=>{
+  const saveSuccess = () => {
     message.info('保存成功！');
     actionRef.current?.reload();
     setWorkflowName('')
     handleModalOpen(false)
     setCurrentNodes(undefined)
+    editer.current?.reset();
   }
   return (
     <PageContainer>
@@ -137,7 +138,7 @@ const Page: React.FC = () => {
             },
           });
         }}
-        
+
         footer={<div><Button style={{ marginRight: '15px' }} onClick={() => {
           confirm({
             title: '确定要取消吗？',
@@ -160,7 +161,7 @@ const Page: React.FC = () => {
                 if (editer.current) {
                   post('/workflow/record/save', {
                     data: {
-                      id:workflow?.id,
+                      id: workflow?.id,
                       workflowName: workflowName,
                       workflowStatus: 0, workflowNodes: JSON.stringify(editer.current.nodes)
                     }
@@ -185,7 +186,7 @@ const Page: React.FC = () => {
                     if (editer.current) {
                       post('/workflow/record/save', {
                         data: {
-                          id:workflow?.id,
+                          id: workflow?.id,
                           workflowName: workflowName,
                           workflowStatus: 1, workflowNodes: JSON.stringify(editer.current.nodes)
                         }
@@ -203,7 +204,7 @@ const Page: React.FC = () => {
                 if (editer.current) {
                   post('/workflow/record/save', {
                     data: {
-                      id:workflow?.id,
+                      id: workflow?.id,
                       workflowName: workflowName,
                       workflowStatus: 1, workflowNodes: JSON.stringify(editer.current.nodes)
                     }
@@ -219,7 +220,7 @@ const Page: React.FC = () => {
           }}>发布</Button>
         </div>}
       >
-        <WorkflowEdit ref={editer} users={userList} jobs={jobTreeData} nodes={currentNodes} workfolws={workflowTreeData}/>
+        <WorkflowEdit ref={editer} users={userList} jobs={jobTreeData} nodes={currentNodes} workfolws={workflowTreeData} />
       </Modal>
       <ProTable
         actionRef={actionRef}
