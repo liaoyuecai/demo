@@ -12,6 +12,7 @@ public class WorkflowRecord extends TableBaseEntity {
 
     private String workflowName;
     private Integer workflowStatus;
+    private Integer typeId;
     private String workflowNodes;
 
 }

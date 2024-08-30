@@ -94,7 +94,12 @@ export default [
   }, {
     name: 'workflow',
     path: '/workflow',
-    component: './workflow',
-    
+    routes: [
+      {
+        name: 'list',
+        path: '/workflow/list',
+        component: './workflow/list'
+      }
+    ]
   }
 ];

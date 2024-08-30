@@ -8,7 +8,7 @@ import com.demo.core.dto.DeleteRequest;
 import com.demo.core.dto.PageList;
 import com.demo.sys.datasource.dto.SimpleUserDto;
 import com.demo.workflow.datasource.dto.WorkflowRecordDto;
-import com.demo.workflow.datasource.dto.page.WorkflowRecordRequest;
+import com.demo.workflow.datasource.dto.page.WorkflowRecordPageRequest;
 import com.demo.workflow.datasource.entity.WorkflowRecord;
 import com.demo.workflow.service.WorkflowRecordService;
 import jakarta.annotation.Resource;
@@ -39,7 +39,7 @@ public class WorkflowRecordController {
     }
 
     @PostMapping("/page")
-    public ApiHttpResponse<PageList<WorkflowRecord>> page(@RequestBody WorkflowRecordRequest request) {
+    public ApiHttpResponse<PageList<WorkflowRecord>> page(@RequestBody WorkflowRecordPageRequest request) {
         return request.success(service.findPage(request));
     }
 

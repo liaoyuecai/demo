@@ -250,9 +250,23 @@ INSERT INTO `sys_user_role` VALUES ('21', '1', '2');
 INSERT INTO `sys_user_role` VALUES ('22', '3', '4');
 
 
+DROP TABLE IF EXISTS `workflow_type`;
+CREATE TABLE `workflow_type` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `type_name` varchar(20) NOT NULL COMMENT '流程名称',
+  `status` smallint(1) DEFAULT '1' COMMENT '状态 0禁用1启用',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_by` int(11) NOT NULL COMMENT '创建人',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `update_by` int(11) DEFAULT NULL COMMENT '修改人',
+  `deleted` smallint(1) DEFAULT '0' COMMENT '删除状态',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程类型表';
+
 DROP TABLE IF EXISTS `workflow_record`;
 CREATE TABLE `workflow_record` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+   `type_id` int(11) NOT NULL COMMENT '流程类型id',
   `workflow_name` varchar(20) NOT NULL COMMENT '流程名称',
   `workflow_nodes` text NOT NULL COMMENT '流程图形节点',
   `status` smallint(1) DEFAULT '1' COMMENT '状态 0禁用1启用',
@@ -264,6 +278,7 @@ CREATE TABLE `workflow_record` (
   `deleted` smallint(1) DEFAULT '0' COMMENT '删除状态',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程表';
+
 
 DROP TABLE IF EXISTS `workflow_node`;
 CREATE TABLE `workflow_node` (
