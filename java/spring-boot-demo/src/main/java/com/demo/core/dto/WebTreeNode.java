@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 public class WebTreeNode {
+    protected Integer id;
     protected Object key;
     protected Object parentKey;
     protected String title;

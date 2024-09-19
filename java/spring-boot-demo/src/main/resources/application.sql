@@ -325,23 +325,44 @@ CREATE TABLE `workflow_node_job` (
 DROP TABLE IF EXISTS `workflow_active`;
 CREATE TABLE `workflow_active` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_name` varchar(200) NOT NULL COMMENT '流程名称',
+  `node_id` int(11) NOT NULL COMMENT '目前流程节点',
+  `parent_workflow_id` int(11)   COMMENT '流程id',
   `workflow_id` int(11) NOT NULL COMMENT '流程id',
-  `active_name` varchar(20) NOT NULL COMMENT '发起流程名称',
-  `active_node_id` int(11) NOT NULL COMMENT '目前流程节点',
-  `active_status` smallint(2) NOT NULL COMMENT '流程状态：1 草稿 2 流转中 3 完成 4 审核通过 5 审核不通过',
-  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
   `create_by` int(11) NOT NULL COMMENT '创建人',
+  `status` smallint(1) NOT NULL COMMENT '状态 0 结束 1正常',
+  `update_by` int(11)   COMMENT '修改人，这里作为锁定流程使用，只有修改人能够修改流程，避免多人并发问题',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程活动表';
+
+DROP TABLE IF EXISTS `workflow_distribute`;
+CREATE TABLE `workflow_distribute` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_id` int(11) NOT NULL COMMENT '流程id',
+  `user_id` int(11) NOT NULL COMMENT '用户id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程分发表';
+
+DROP TABLE IF EXISTS `workflow_distribute_cc`;
+CREATE TABLE `workflow_distribute` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workflow_id` int(11) NOT NULL COMMENT '流程id',
+    `node_history_id` int(11) NOT NULL COMMENT '节点id',
+  `user_id` int(11) NOT NULL COMMENT '用户id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程抄送分发表';
 
 DROP TABLE IF EXISTS `workflow_active_history`;
 CREATE TABLE `workflow_active_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `workflow_id` int(11) NOT NULL COMMENT '流程id',
-  `active_node_id` int(11) NOT NULL COMMENT '目前流程节点',
-  `active_node_id` int(11) NOT NULL COMMENT '目前流程节点',
-  `data_status` smallint(1) NOT NULL COMMENT '数据状态：1活跃数据 2历史数据',
-  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `parent_id` int(11)  COMMENT '上一级流转历史id',
+  `node_id` int(11) NOT NULL COMMENT '目前流程节点',
+  `active_input` text  COMMENT '流程输入内容',
+  `active_file` varchar(100) COMMENT '附件地址',
+  `status` smallint(1) NOT NULL COMMENT '状态 0 正在编辑 1 已经完成',
+  `active_status` smallint(1) NOT NULL COMMENT '流程状态：1正常流转 2 回退 3审批通过 4审批不通过',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
   `create_by` int(11) NOT NULL COMMENT '创建人',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程活动记录表';

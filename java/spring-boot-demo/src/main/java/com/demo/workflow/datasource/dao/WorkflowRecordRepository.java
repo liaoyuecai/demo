@@ -2,6 +2,7 @@ package com.demo.workflow.datasource.dao;
 
 import com.demo.core.config.jpa.CustomerBaseRepository;
 import com.demo.workflow.datasource.dto.WorkflowRecordDto;
+import com.demo.workflow.datasource.dto.WorkflowRecordTypeDto;
 import com.demo.workflow.datasource.entity.WorkflowRecord;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,11 @@ public interface WorkflowRecordRepository extends CustomerBaseRepository<Workflo
             where t.deleted = 0 and t.status = 1 and t.workflowStatus = 1
             """)
     List<WorkflowRecordDto> findRecordsDto();
+
+    @Query("""
+            select new WorkflowRecordTypeDto(r.id,r.workflowName,t.typeName,t.id) from WorkflowRecord r 
+            JOIN WorkflowType t
+            where r.deleted = 0 and r.status = 1 and r.id in :workflowIds
+            """)
+    List<WorkflowRecordTypeDto> findRecordsTypeDto(List<Integer> workflowIds);
 }

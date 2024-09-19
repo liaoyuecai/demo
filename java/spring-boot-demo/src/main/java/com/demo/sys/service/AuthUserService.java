@@ -5,6 +5,7 @@ import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
 import com.demo.core.utils.StringUtils;
 import com.demo.sys.datasource.AuthUserCache;
+import com.demo.sys.datasource.dao.SysJobRepository;
 import com.demo.sys.datasource.dao.SysMenuRepository;
 import com.demo.sys.datasource.dao.SysRoleRepository;
 import com.demo.sys.datasource.dao.SysUserRepository;
@@ -27,6 +28,8 @@ public class AuthUserService implements UserDatasourceService {
     SysRoleRepository roleRepository;
     @Resource
     SysMenuRepository menuRepository;
+    @Resource
+    SysJobRepository jobRepository;
     @Resource
     private PasswordEncoder passwordEncoder;
     @Value("${user.root.username:'root'}")
@@ -53,6 +56,7 @@ public class AuthUserService implements UserDatasourceService {
             userCache.setRoleList(roleRepository.findRolesByUserId(userCache.getId()));
             if (userCache.getRoleList() != null && !userCache.getRoleList().isEmpty())
                 userCache.setMenuList(menuRepository.findByRoleId(userCache.getRoleList().stream().map(SysRole::getId).toList()));
+            userCache.setJobList(jobRepository.findByUserId(userCache.getId()));
         }
     }
 

@@ -55,4 +55,5 @@ public class WorkflowRecordController {
         service.deleteUpdate(request);
         return request.success();
     }
+
 }
