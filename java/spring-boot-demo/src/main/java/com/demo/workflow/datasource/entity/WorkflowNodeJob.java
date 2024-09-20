@@ -16,6 +16,9 @@ public class WorkflowNodeJob {
     private Integer nodeId;
     private Integer jobId;
 
+    public WorkflowNodeJob() {
+    }
+
     public WorkflowNodeJob(Integer nodeId, Integer jobId) {
         this.nodeId = nodeId;
         this.jobId = jobId;

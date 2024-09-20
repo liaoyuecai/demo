@@ -31,20 +31,21 @@ public interface WorkflowNodeRepository extends CustomerBaseRepository<WorkflowN
 
     @Query("""
             select t2 from WorkflowNode t1 JOIN WorkflowNode t2 
-            ON t1.id = t2.parent_id
+            ON t1.id = t2.parentId
              where t1.deleted = 0 and t1.nodeType = 1 and t1.workflowId = :id
             """)
     WorkflowNode findWorkflowFirstNode(Integer id);
 
-    @Query("""
-            SELECT DISTINCT nu.userId  FROM workflowNodeUser nu
-            WHERE nu.nodeId = :id 
+    @Query(value = """
+            SELECT DISTINCT nu.user_id 
+            FROM workflow_node_user nu 
+            WHERE nu.node_id = :id
             UNION DISTINCT
-            SELECT DISTINCT su.userId
-            FROM workflowNodeJob nj
-            JOIN sysUserJob suj ON nj.jobId = suj.jobId 
-            WHERE nj.nodeId = :id 
-            """)
+            SELECT DISTINCT suj.user_id
+            FROM workflow_node_job nj
+            JOIN sys_user_job suj ON nj.job_id = suj.job_id 
+            WHERE nj.node_id = :id
+            """, nativeQuery = true)
     List<Integer> findNodeUserIds(Integer id);
 
     WorkflowNode findByParentIdAndDeleted(Integer parentId, int i);

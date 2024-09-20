@@ -12,6 +12,9 @@ public class WorkflowRecordDto {
     private Integer id;
     private String workflowName;
 
+    public WorkflowRecordDto() {
+    }
+
     public WorkflowRecordDto(Integer id, String workflowName) {
         this.id = id;
         this.workflowName = workflowName;

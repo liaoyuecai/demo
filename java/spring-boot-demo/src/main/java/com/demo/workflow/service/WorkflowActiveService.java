@@ -1,6 +1,8 @@
 package com.demo.workflow.service;
 
 import com.demo.core.dto.ApiHttpRequest;
+import com.demo.core.dto.PageList;
+import com.demo.core.dto.PageListRequest;
 import com.demo.core.dto.WebTreeNode;
 import com.demo.core.exception.ErrorCode;
 import com.demo.core.exception.GlobalException;
@@ -9,14 +11,12 @@ import com.demo.core.utils.JsonUtils;
 import com.demo.sys.datasource.AuthUserCache;
 import com.demo.sys.datasource.dao.SysUserRepository;
 import com.demo.workflow.datasource.dao.*;
-import com.demo.workflow.datasource.dto.NodeInputData;
-import com.demo.workflow.datasource.dto.SaveHistory;
-import com.demo.workflow.datasource.dto.WorkflowInputAndData;
-import com.demo.workflow.datasource.dto.WorkflowRecordTypeDto;
+import com.demo.workflow.datasource.dto.*;
 import com.demo.workflow.datasource.entity.*;
 import jakarta.annotation.Resource;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service("workflowRecordService")
+@Service("workflowActiveService")
 public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowActiveRepository> {
 
     @Resource
@@ -33,8 +33,6 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
     WorkflowDistributeCCRepository distributeCCRepository;
     @Resource
     WorkflowActiveHistoryRepository activeHistoryRepository;
-    @Resource
-    WorkflowActiveRepository activeRepository;
     @Resource
     WorkflowDistributeRepository distributeRepository;
     @Resource
@@ -123,7 +121,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
         WorkflowDistribute distribute = distributeRepository.findByWorkflowIdAndUserId(request.getData(), request.getUser().getId());
         if (distribute == null)
             throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_ERROR);
-        int re = activeRepository.updateUpdateBy(request.getUser().getId(), request.getData());
+        int re = repository.updateUpdateBy(request.getUser().getId(), request.getData());
         if (re < 1)
             throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_HANDLE_ERROR);
     }
@@ -136,7 +134,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
      */
     @Transactional
     public void submit(ApiHttpRequest<SaveHistory> request) {
-        WorkflowActive active = activeRepository.findByWorkflowIdAndNodeId(request.getData().getWorkflowId(), request.getData().getNodeId());
+        WorkflowActive active = repository.findByWorkflowIdAndNodeId(request.getData().getWorkflowId(), request.getData().getNodeId());
         WorkflowActiveHistory history = null;
         WorkflowNode node = nodeRepository.findById(request.getData().getNodeId()).get();
         if (active == null) {
@@ -151,6 +149,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
             active.setStatus(1);
             active.setNodeId(request.getData().getNodeId());
             active.setWorkflowId(node.getWorkflowId());
+            active.setWorkflowName(request.getData().getWorkflowName());
             active.setCreateTime(LocalDateTime.now());
             active.setUpdateBy(request.getUser().getId());
             active.setCreateBy(request.getUser().getId());
@@ -166,6 +165,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
                 throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_ERROR);
             history = activeHistoryRepository.findByNodeIdAndStatus(request.getData().getNodeId(), 0);
         }
+        history.setActiveStatus(request.getData().getActiveStatus());
         history.setActiveInput(JsonUtils.toJsonStr(request.getData().getInputs()));
         activeHistoryRepository.save(history);
         //流程分发
@@ -197,7 +197,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
                     childActive.setParentWorkflowId(node.getWorkflowId());
                     childActive.setCreateBy(request.getUser().getId());
                     childActive.setCreateTime(LocalDateTime.now());
-                    activeRepository.save(childActive);
+                    repository.save(childActive);
                     WorkflowNode childStartNode = nodeRepository.findStartNode(childActive.getWorkflowId());
                     sendUserIds = nodeRepository.findNodeUserIds(childStartNode.getId());
                     nextNode = nodeRepository.findByParentIdAndDeleted(childStartNode.getId(), 0);
@@ -231,7 +231,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
         }
         active.setNodeId(nextNode.getId());
         active.setUpdateBy(null);
-        activeRepository.save(active);
+        repository.save(active);
     }
 
     /**
@@ -241,7 +241,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
      */
     @Transactional
     public void saveHistory(ApiHttpRequest<SaveHistory> request) {
-        WorkflowActive active = activeRepository.findByWorkflowIdAndNodeId(request.getData().getWorkflowId(), request.getData().getNodeId());
+        WorkflowActive active = repository.findByWorkflowIdAndNodeId(request.getData().getWorkflowId(), request.getData().getNodeId());
         WorkflowActiveHistory history = null;
         if (active == null) {
             //此时表示为流程开始后的第一次保存
@@ -264,7 +264,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
             history.setNodeId(request.getData().getNodeId());
             history.setCreateTime(LocalDateTime.now());
             history.setActiveStatus(0);
-            activeRepository.save(active);
+            repository.save(active);
         } else {
             //不是第一次保存则判断该节点是否为当前用户处理节点
             if (!request.getUser().getId().equals(active.getUpdateBy()))
@@ -293,23 +293,29 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
             user.getJobList().forEach(i -> userJobs.add(i.getId()));
         }
         List<WorkflowNodeUser> nodeUsers = nodeUserRepository.findByNodeIdIn(allStartNodeIds);
+        Set<Integer> userWorkflows = nodeUsers.stream().map(i->nodeToWorkflow.get(i.getNodeId())).collect(Collectors.toSet());
         List<WorkflowNodeJob> nodeJobs = nodeJobRepository.findByNodeIdIn(allStartNodeIds);
+        Set<Integer> jobWorkflows = nodeJobs.stream().map(i->nodeToWorkflow.get(i.getNodeId())).collect(Collectors.toSet());
         List<Integer> workflowIds = new ArrayList<>();
         nodeUsers.forEach(i -> {
-            if (userId.equals(i.getId()) && nodeToWorkflow.containsKey(i.getId())) {
+            if (userId.equals(i.getId()) && nodeToWorkflow.containsKey(i.getNodeId())) {
                 workflowIds.add(nodeToWorkflow.get(i.getId()));
-                nodeToWorkflow.remove(i.getId());
+                nodeToWorkflow.remove(i.getNodeId());
             }
         });
         nodeJobs.forEach(i -> {
-            if (userJobs.contains(i.getId()) && nodeToWorkflow.containsKey(i.getId())) {
+            if (userJobs.contains(i.getId()) && nodeToWorkflow.containsKey(i.getNodeId())) {
                 workflowIds.add(nodeToWorkflow.get(i.getId()));
-                nodeToWorkflow.remove(i.getId());
+                nodeToWorkflow.remove(i.getNodeId());
             }
         });
         if (!nodeToWorkflow.isEmpty()) {
-            workflowIds.addAll(nodeToWorkflow.values());
+            workflowIds.addAll(nodeToWorkflow.values().stream().filter(i-> !userWorkflows.contains(i) && !jobWorkflows.contains(i)).toList());
         }
         return workflowIds;
+    }
+
+    public PageList<WorkflowActiveDto> findDtoPage(PageListRequest<WorkflowActiveDto> request) {
+        return request.toPageList(repository.findDtoPage(request.getData().getWorkflowName(), request.getUser().getId(), request.toPageable()));
     }
 }

@@ -1059,9 +1059,9 @@ const WorkflowEdit = forwardRef((prop: WorkflowEditProps, ref) => {
                                 rules={[{ required: true, message: '请选择类型' }]}
                             >
                                 <Select placeholder='选择类型' style={{ width: '100px', height: '30px' }}>
-                                    <Select.Option value={0}>日期时间</Select.Option>
-                                    <Select.Option value={1}>输入框</Select.Option>
-                                    <Select.Option value={2}>长文本</Select.Option>
+                                    <Select.Option value={1}>日期时间</Select.Option>
+                                    <Select.Option value={2}>输入框</Select.Option>
+                                    <Select.Option value={3}>长文本</Select.Option>
                                 </Select>
                             </Form.Item>
                             <Form.Item

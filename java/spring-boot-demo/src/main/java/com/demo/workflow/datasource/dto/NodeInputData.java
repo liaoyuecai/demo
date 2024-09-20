@@ -9,6 +9,7 @@ import lombok.Setter;
 public class NodeInputData {
     private String inputTitle;
     private Integer inputNecessary;
+    //类型 1日期时间 2 输入框 3长文本
     private Integer inputType;
     private String inputValue;
 

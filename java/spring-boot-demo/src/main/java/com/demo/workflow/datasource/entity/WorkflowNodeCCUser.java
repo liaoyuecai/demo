@@ -16,6 +16,9 @@ public class WorkflowNodeCCUser {
     private Integer nodeId;
     private Integer userId;
 
+    public WorkflowNodeCCUser() {
+    }
+
     public WorkflowNodeCCUser(Integer nodeId, Integer userId) {
         this.nodeId = nodeId;
         this.userId = userId;

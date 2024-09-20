@@ -14,6 +14,9 @@ public class SimpleUserDto {
     private String realName;
     private String phone;
 
+    public SimpleUserDto() {
+    }
+
     public SimpleUserDto(Integer id, String realName, String phone) {
         this.id = id;
         this.realName = realName;

@@ -14,6 +14,9 @@ public class WorkflowRecordTypeDto {
     private String typeName;
     private Integer typeId;
 
+    public WorkflowRecordTypeDto() {
+    }
+
     public WorkflowRecordTypeDto(Integer id, String workflowName, String typeName, Integer typeId) {
         this.id = id;
         this.workflowName = workflowName;

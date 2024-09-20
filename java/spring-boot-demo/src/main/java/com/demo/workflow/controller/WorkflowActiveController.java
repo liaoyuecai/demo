@@ -1,10 +1,8 @@
 package com.demo.workflow.controller;
 
-import com.demo.core.aop.RequestBaseEntitySet;
-import com.demo.core.dto.ApiHttpRequest;
-import com.demo.core.dto.ApiHttpResponse;
-import com.demo.core.dto.WebTreeNode;
+import com.demo.core.dto.*;
 import com.demo.workflow.datasource.dto.SaveHistory;
+import com.demo.workflow.datasource.dto.WorkflowActiveDto;
 import com.demo.workflow.datasource.dto.WorkflowInputAndData;
 import com.demo.workflow.service.WorkflowActiveService;
 import jakarta.annotation.Resource;
@@ -22,10 +20,14 @@ public class WorkflowActiveController {
     private WorkflowActiveService service;
 
 
-    @PostMapping("/list")
-    @RequestBaseEntitySet(checkCreateBy = true)
-    public ApiHttpResponse<List<WebTreeNode>> list(@RequestBody ApiHttpRequest request) {
+    @PostMapping("/createList")
+    public ApiHttpResponse<List<WebTreeNode>> createList(@RequestBody ApiHttpRequest request) {
         return request.success(service.findUserWorkflowList(request));
+    }
+
+    @PostMapping("/page")
+    public ApiHttpResponse<PageList<WorkflowActiveDto>> page(@RequestBody PageListRequest<WorkflowActiveDto> request) {
+        return request.success(service.findDtoPage(request));
     }
 
     @PostMapping("/saveHistory")

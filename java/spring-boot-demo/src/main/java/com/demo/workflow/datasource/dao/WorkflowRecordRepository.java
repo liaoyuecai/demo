@@ -21,7 +21,7 @@ public interface WorkflowRecordRepository extends CustomerBaseRepository<Workflo
 
     @Query("""
             select new WorkflowRecordTypeDto(r.id,r.workflowName,t.typeName,t.id) from WorkflowRecord r 
-            JOIN WorkflowType t
+            JOIN WorkflowType t ON r.typeId = t.id
             where r.deleted = 0 and r.status = 1 and r.id in :workflowIds
             """)
     List<WorkflowRecordTypeDto> findRecordsTypeDto(List<Integer> workflowIds);

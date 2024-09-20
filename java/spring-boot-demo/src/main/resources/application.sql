@@ -314,6 +314,14 @@ CREATE TABLE `workflow_node_user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点绑定用户表';
 
+DROP TABLE IF EXISTS `workflow_node_cc_user`;
+CREATE TABLE `workflow_node_cc_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `node_id` int(11) NOT NULL COMMENT '节点id',
+  `user_id` int(11) NOT NULL COMMENT '用户id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程节点绑定抄送用户表';
+
 DROP TABLE IF EXISTS `workflow_node_job`;
 CREATE TABLE `workflow_node_job` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -345,7 +353,7 @@ CREATE TABLE `workflow_distribute` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程分发表';
 
 DROP TABLE IF EXISTS `workflow_distribute_cc`;
-CREATE TABLE `workflow_distribute` (
+CREATE TABLE `workflow_distribute_cc` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `workflow_id` int(11) NOT NULL COMMENT '流程id',
     `node_history_id` int(11) NOT NULL COMMENT '节点id',

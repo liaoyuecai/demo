@@ -135,15 +135,18 @@ public class WorkflowRecordService extends CURDService<WorkflowRecord, WorkflowR
             switch (n.getType()) {
                 case 1, 2, 3, 4, 5:
                     WorkflowNode node = nodeMap.get(n.getKey());
-                    if (node!=null){
-                        if (n.getUserIds()!=null && !n.getUserIds().isEmpty())
-                            n.getUserIds().forEach(i->nodeUsers.add(new WorkflowNodeUser(node.getId(),i)));
-                        if (n.getCcUserIds()!=null && !n.getCcUserIds().isEmpty())
-                            n.getUserIds().forEach(i->nodeCCUsers.add(new WorkflowNodeCCUser(node.getId(),i)));
-                        if (n.getJobIds()!=null && !n.getJobIds().isEmpty())
-                            n.getUserIds().forEach(i->nodeJobs.add(new WorkflowNodeJob(node.getId(),i)));
-                        if (n.getInputs()!=null && !n.getInputs().isEmpty()){
-                            n.getInputs().forEach(i->i.setNodeId(node.getId()));
+                    if (node != null) {
+                        if (n.getUserIds() != null && !n.getUserIds().isEmpty())
+                            n.getUserIds().forEach(i -> nodeUsers.add(new WorkflowNodeUser(node.getId(), i)));
+                        if (n.getCcUserIds() != null && !n.getCcUserIds().isEmpty())
+                            n.getCcUserIds().forEach(i -> nodeCCUsers.add(new WorkflowNodeCCUser(node.getId(), i)));
+                        if (n.getJobIds() != null && !n.getJobIds().isEmpty())
+                            n.getJobIds().forEach(i -> nodeJobs.add(new WorkflowNodeJob(node.getId(), i)));
+                        if (n.getInputs() != null && !n.getInputs().isEmpty()) {
+                            n.getInputs().forEach(i -> {
+                                i.setNodeId(node.getId());
+                                i.setDeleted(0);
+                            });
                             nodeInputs.addAll(n.getInputs());
                         }
                     }
