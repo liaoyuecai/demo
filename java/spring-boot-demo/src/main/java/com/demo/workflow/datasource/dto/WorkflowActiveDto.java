@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 public class WorkflowActiveDto {
     @Id
     private Integer id;
+    private Integer workflowId;
+    private Integer nodeId;
     private String workflowName;
     private String nodeName;
     private LocalDateTime createTime;
@@ -19,11 +21,21 @@ public class WorkflowActiveDto {
     public WorkflowActiveDto() {
     }
 
-    public WorkflowActiveDto(Integer id, String workflowName, String nodeName, LocalDateTime createTime, Integer status) {
+    public WorkflowActiveDto(Integer id, Integer workflowId, Integer nodeId, String workflowName) {
         this.id = id;
+        this.workflowId = workflowId;
+        this.nodeId = nodeId;
+        this.workflowName = workflowName;
+    }
+
+    public WorkflowActiveDto(Integer id, Integer workflowId, Integer nodeId, String workflowName, String nodeName, LocalDateTime createTime, Integer status) {
+        this.id = id;
+        this.workflowId = workflowId;
+        this.nodeId = nodeId;
         this.workflowName = workflowName;
         this.nodeName = nodeName;
         this.createTime = createTime;
         this.status = status;
     }
+
 }

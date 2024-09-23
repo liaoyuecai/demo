@@ -22,9 +22,16 @@ public interface WorkflowActiveRepository extends CustomerBaseRepository<Workflo
             """)
     int updateUpdateBy(Integer userId, Integer workflowId);
     @Query("""
-            select new WorkflowActiveDto(wa.id,wa.workflowName,wn.nodeName,wa.createTime,wa.status) from WorkflowActive wa 
+            select new WorkflowActiveDto(wa.id,wa.workflowId,wa.nodeId,wa.workflowName,wn.nodeName,wa.createTime,wa.status) from WorkflowActive wa 
             Join WorkflowNode wn ON wa.nodeId = wn.id
             where wa.createBy = :userId and (:workflowName is null or wa.workflowName like CONCAT('%', :workflowName, '%'))
             """)
     Page<WorkflowActiveDto> findDtoPage(String workflowName,Integer userId, Pageable pageable);
+
+    @Query("""
+            select new WorkflowActiveDto(wa.id,wa.workflowId,wa.nodeId,wa.workflowName) from WorkflowActive wa 
+            Join WorkflowDistribute wd ON wa.workflowId = wd.workflowId
+            where wd.userId = :userId and wa.status = 1
+            """)
+    Page<WorkflowActiveDto> findWorkDtoPage(Integer userId, Pageable pageable);
 }

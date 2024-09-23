@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface WorkflowDistributeCCRepository extends CustomerBaseRepository<WorkflowDistributeCC> {
 
 
+    void deleteByWorkflowId(Integer workflowId);
 }

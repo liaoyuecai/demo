@@ -49,8 +49,6 @@ const Page: React.FC = () => {
               options.push(<Col span={8} key={child.title}><a onClick={() => {
                 post<WorkflowInputAndData>('/workflow/active/start', { data: child.value }).then((res => {
                   if (res.code === 0 && res.data) {
-                    
-
                     const formItems: any = [];
                     formItems.push(<Form.Item
                       name={'workflowId'}
@@ -77,7 +75,7 @@ const Page: React.FC = () => {
                     >
                       <Input />
                     </Form.Item>);
-                    const inputsMap:any = {};
+                    const inputsMap: any = {};
                     if (res.data.inputs) {
                       res.data.inputs.map(input => {
                         inputsMap[input.inputTitle] = input;
@@ -119,13 +117,13 @@ const Page: React.FC = () => {
                     setWorkflowContent(<Form form={form}
                       onFinish={(val) => {
                         const { workflowId, workflowName, nodeId, ...inputs } = val
-                        const inputValues:any[] = []
+                        const inputValues: any[] = []
                         Object.keys(inputsMap).forEach(key => {
                           const value = inputsMap[key];
                           value.inputValue = inputs[key]
                           inputValues.push(value)
                         });
-                        post('/workflow/active/submit', {data:{ workflowId: workflowId, workflowName: workflowName, nodeId: nodeId, inputs: inputValues, activeStatus: 1 }}).then(res => {
+                        post('/workflow/active/submit', { data: { workflowId: workflowId, workflowName: workflowName, nodeId: nodeId, inputs: inputValues, activeStatus: 1 } }).then(res => {
                           if (res.code === 0) {
                             message.success('任务创建成功')
                             handleModalOpen(false);
@@ -196,7 +194,7 @@ const Page: React.FC = () => {
   const { confirm } = Modal;
   return (
     <PageContainer>
-      <Modal title='开启流程' open={modalOpen} onOk={() => {form.submit(); }} onCancel={() => {
+      <Modal title='开启流程' open={modalOpen} onOk={() => { form.submit(); }} onCancel={() => {
         confirm({
           title: '确定要取消吗？',
           icon: <ExclamationCircleFilled />,

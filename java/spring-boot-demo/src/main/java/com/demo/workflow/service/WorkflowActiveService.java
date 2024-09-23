@@ -16,7 +16,6 @@ import com.demo.workflow.datasource.entity.*;
 import jakarta.annotation.Resource;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -181,7 +180,10 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
         } else {
             switch (node.getNodeType()) {
                 //流程结束
-                case 2 -> active.setStatus(0);
+                case 2 -> {
+                    distributeCCRepository.deleteByWorkflowId(active.getWorkflowId());
+                    active.setStatus(0);
+                }
                 //任务节点
                 case 3 -> {
                     nextNode = nodeRepository.findByParentIdAndDeleted(request.getData().getNodeId(), 0);
@@ -293,9 +295,9 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
             user.getJobList().forEach(i -> userJobs.add(i.getId()));
         }
         List<WorkflowNodeUser> nodeUsers = nodeUserRepository.findByNodeIdIn(allStartNodeIds);
-        Set<Integer> userWorkflows = nodeUsers.stream().map(i->nodeToWorkflow.get(i.getNodeId())).collect(Collectors.toSet());
+        Set<Integer> userWorkflows = nodeUsers.stream().map(i -> nodeToWorkflow.get(i.getNodeId())).collect(Collectors.toSet());
         List<WorkflowNodeJob> nodeJobs = nodeJobRepository.findByNodeIdIn(allStartNodeIds);
-        Set<Integer> jobWorkflows = nodeJobs.stream().map(i->nodeToWorkflow.get(i.getNodeId())).collect(Collectors.toSet());
+        Set<Integer> jobWorkflows = nodeJobs.stream().map(i -> nodeToWorkflow.get(i.getNodeId())).collect(Collectors.toSet());
         List<Integer> workflowIds = new ArrayList<>();
         nodeUsers.forEach(i -> {
             if (userId.equals(i.getId()) && nodeToWorkflow.containsKey(i.getNodeId())) {
@@ -310,12 +312,25 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
             }
         });
         if (!nodeToWorkflow.isEmpty()) {
-            workflowIds.addAll(nodeToWorkflow.values().stream().filter(i-> !userWorkflows.contains(i) && !jobWorkflows.contains(i)).toList());
+            workflowIds.addAll(nodeToWorkflow.values().stream().filter(i -> !userWorkflows.contains(i) && !jobWorkflows.contains(i)).toList());
         }
         return workflowIds;
     }
 
     public PageList<WorkflowActiveDto> findDtoPage(PageListRequest<WorkflowActiveDto> request) {
         return request.toPageList(repository.findDtoPage(request.getData().getWorkflowName(), request.getUser().getId(), request.toPageable()));
+    }
+
+    public PageList<WorkflowActiveDto> findWorkDtoPage(PageListRequest<WorkflowActiveDto> request) {
+        return request.toPageList(repository.findWorkDtoPage(request.getUser().getId(), request.toPageable()));
+    }
+
+    public WorkflowEdit findWorkDtoEdit(ApiHttpRequest<WorkflowActiveDto> request) {
+        WorkflowEdit edit = new WorkflowEdit();
+        edit.setHistory(activeHistoryRepository.findDtoByWorkflowId(request.getData().getWorkflowId()));
+        edit.setActive(activeHistoryRepository.findActiveDtoByWorkflowId(request.getData().getWorkflowId()));
+        if (edit.getActive() == null)
+            edit.setNode(nodeRepository.findById(request.getData().getNodeId()).get());
+        return edit;
     }
 }

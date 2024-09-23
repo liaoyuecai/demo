@@ -104,6 +104,11 @@ export default [
         name: 'myCreate',
         path: '/workflow/myCreate',
         component: './workflow/myCreate'
+      },
+      {
+        name: 'myWork',
+        path: '/workflow/myWork',
+        component: './workflow/myWork'
       }
     ]
   }

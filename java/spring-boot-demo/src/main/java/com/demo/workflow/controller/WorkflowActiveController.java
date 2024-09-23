@@ -3,6 +3,7 @@ package com.demo.workflow.controller;
 import com.demo.core.dto.*;
 import com.demo.workflow.datasource.dto.SaveHistory;
 import com.demo.workflow.datasource.dto.WorkflowActiveDto;
+import com.demo.workflow.datasource.dto.WorkflowEdit;
 import com.demo.workflow.datasource.dto.WorkflowInputAndData;
 import com.demo.workflow.service.WorkflowActiveService;
 import jakarta.annotation.Resource;
@@ -23,6 +24,16 @@ public class WorkflowActiveController {
     @PostMapping("/createList")
     public ApiHttpResponse<List<WebTreeNode>> createList(@RequestBody ApiHttpRequest request) {
         return request.success(service.findUserWorkflowList(request));
+    }
+
+    @PostMapping("/workPage")
+    public ApiHttpResponse<PageList<WorkflowActiveDto>> workPage(@RequestBody PageListRequest<WorkflowActiveDto> request) {
+        return request.success(service.findWorkDtoPage(request));
+    }
+
+    @PostMapping("/workEdit")
+    public ApiHttpResponse<WorkflowEdit> workEdit(@RequestBody ApiHttpRequest<WorkflowActiveDto> request) {
+        return request.success(service.findWorkDtoEdit(request));
     }
 
     @PostMapping("/page")
