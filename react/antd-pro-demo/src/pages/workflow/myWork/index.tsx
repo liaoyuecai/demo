@@ -7,6 +7,8 @@ import {
 } from '@ant-design/pro-components';
 import { Button, Card, Col, DatePicker, Form, Input, message, Modal, Row, Steps, theme } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+import Work,{ WorkflowInputAndData } from '../work';
+import { set } from 'lodash';
 
 
 
@@ -16,27 +18,15 @@ import React, { useEffect, useRef, useState } from 'react';
 const Page: React.FC = () => {
   const [modalOpen, handleModalOpen] = useState<boolean>(false);
   const actionRef = useRef<ActionType>();
-  const [current, setCurrent] = useState(0);
-
+  const [workflowId, setWorkflowId] = useState<number>(0);
+  const [workflowName, setWorkflowName] = useState<string>('');
+  const [workflowInputAndData, setWorkflowInputAndData] = useState<WorkflowInputAndData|undefined>();
   const [workflowSelect, setWorkflowSelect] = useState<any>();
   const [workflowContent, setWorkflowContent] = useState<any>();
   const [form] = Form.useForm();
   const [bingMenuForm] = Form.useForm();
 
-  type WorkflowInputAndData = {
-    node: {
-      id: number;
-      nodeName: string;
-      workflowId: number;
-    }
-    inputs?: {
-      inputTitle: string,
-      inputNecessary: number;
-      inputType: number;
-      inputValue?: string;
-    }[];
-    filePath?: string;
-  }
+
 
   useEffect(() => {
 
@@ -49,9 +39,12 @@ const Page: React.FC = () => {
       dataIndex: 'workflowName',
       render: (value, recode) => {
         return <a onClick={() => {
-          post<API.Page<any>>('/workflow/active/workEdit', { data: { workflowId: recode.workflowId, nodeId: recode.nodeId } }).then(res => {
+          post<WorkflowInputAndData>('/workflow/active/workEdit', { data: { workflowId: recode.workflowId, nodeId: recode.nodeId } }).then(res => {
             if (res && res.data) {
               handleModalOpen(true)
+              setWorkflowInputAndData(res.data)
+              setWorkflowId(recode.id)
+              setWorkflowName(recode.workflowName)
             }
           })
         }}>{value}</a>;
@@ -75,7 +68,7 @@ const Page: React.FC = () => {
           },
         });
       }}>
-
+        <Work workflowInputAndData={workflowInputAndData} workflowId={workflowId} workflowName={workflowName}/>
       </Modal>
       <ProTable
         actionRef={actionRef}

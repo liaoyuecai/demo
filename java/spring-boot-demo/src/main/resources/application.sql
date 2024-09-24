@@ -367,6 +367,7 @@ CREATE TABLE `workflow_active_history` (
   `parent_id` int(11)  COMMENT '上一级流转历史id',
   `node_id` int(11) NOT NULL COMMENT '目前流程节点',
   `active_input` text  COMMENT '流程输入内容',
+  `opinion` varchar(200)  COMMENT '意见：回退或者审批意见',
   `active_file` varchar(100) COMMENT '附件地址',
   `status` smallint(1) NOT NULL COMMENT '状态 0 正在编辑 1 已经完成',
   `active_status` smallint(1) NOT NULL COMMENT '流程状态：1正常流转 2 回退 3审批通过 4审批不通过',

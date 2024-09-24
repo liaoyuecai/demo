@@ -54,6 +54,7 @@
     "antd-img-crop": "^4.23.0",
     "antd-style": "^3.6.2",
     "classnames": "^2.5.1",
+    "dayjs": "^1.11.13",
     "omit.js": "^2.0.2",
     "querystring": "^0.2.1",
     "rc-menu": "^9.14.0",

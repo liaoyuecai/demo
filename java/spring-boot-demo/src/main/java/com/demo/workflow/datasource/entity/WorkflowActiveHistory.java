@@ -18,6 +18,7 @@ public class WorkflowActiveHistory {
     private Integer nodeId;
     private Integer parentId;
     private String activeInput;
+    private String opinion;
     private String activeFile;
     //状态 0 正在编辑 1 已经完成
     private Integer status;

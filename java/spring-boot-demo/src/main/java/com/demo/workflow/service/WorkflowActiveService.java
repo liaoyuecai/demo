@@ -164,6 +164,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
                 throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_ERROR);
             history = activeHistoryRepository.findByNodeIdAndStatus(request.getData().getNodeId(), 0);
         }
+        history.setOpinion(request.getData().getOpinion());
         history.setActiveStatus(request.getData().getActiveStatus());
         history.setActiveInput(JsonUtils.toJsonStr(request.getData().getInputs()));
         activeHistoryRepository.save(history);
@@ -329,8 +330,9 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
         WorkflowEdit edit = new WorkflowEdit();
         edit.setHistory(activeHistoryRepository.findDtoByWorkflowId(request.getData().getWorkflowId()));
         edit.setActive(activeHistoryRepository.findActiveDtoByWorkflowId(request.getData().getWorkflowId()));
-        if (edit.getActive() == null)
-            edit.setNode(nodeRepository.findById(request.getData().getNodeId()).get());
+        edit.setNode(nodeRepository.findById(request.getData().getNodeId()).get());
         return edit;
+
+
     }
 }
