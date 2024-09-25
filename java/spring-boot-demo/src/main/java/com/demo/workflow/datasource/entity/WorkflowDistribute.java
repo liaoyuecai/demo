@@ -15,14 +15,14 @@ public class WorkflowDistribute {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Integer id;
-    private Integer workflowId;
+    private Integer workflowActiveId;
     private Integer userId;
 
     public WorkflowDistribute() {
     }
 
-    public WorkflowDistribute(Integer workflowId, Integer userId) {
-        this.workflowId = workflowId;
+    public WorkflowDistribute(Integer workflowActiveId, Integer userId) {
+        this.workflowActiveId = workflowActiveId;
         this.userId = userId;
     }
 }

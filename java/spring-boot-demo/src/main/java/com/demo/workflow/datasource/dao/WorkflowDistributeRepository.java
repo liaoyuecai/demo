@@ -8,7 +8,9 @@ import org.springframework.stereotype.Repository;
 public interface WorkflowDistributeRepository extends CustomerBaseRepository<WorkflowDistribute> {
 
 
-    void deleteByWorkflowId(Integer workflowId);
+    void deleteByWorkflowActiveId(Integer workflowActiveId);
 
-    WorkflowDistribute findByWorkflowIdAndUserId(Integer workflowId, Integer id);
+    WorkflowDistribute findByWorkflowActiveIdAndUserId(Integer workflowActiveId, Integer id);
+
+    void deleteByWorkflowActiveIdAndUserId(Integer workflowActiveId, Integer id);
 }

@@ -116,11 +116,13 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
      *
      * @param request
      */
+    @Transactional
     public void handle(ApiHttpRequest<Integer> request) {
-        WorkflowDistribute distribute = distributeRepository.findByWorkflowIdAndUserId(request.getData(), request.getUser().getId());
+        WorkflowDistribute distribute = distributeRepository.findByWorkflowActiveIdAndUserId(request.getData(), request.getUser().getId());
         if (distribute == null)
             throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_ERROR);
         int re = repository.updateUpdateBy(request.getUser().getId(), request.getData());
+        distributeRepository.deleteByWorkflowActiveIdAndUserId(request.getData(), request.getUser().getId());
         if (re < 1)
             throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_HANDLE_ERROR);
     }
@@ -159,10 +161,17 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
             history.setCreateTime(LocalDateTime.now());
 
         } else {
-            //不是第一次保存则判断该节点是否为当前用户处理节点
+//            不是第一次保存则判断该节点是否为当前用户处理节点
             if (!request.getUser().getId().equals(active.getUpdateBy()))
                 throw new GlobalException(ErrorCode.ACCESS_DATA_WORKFLOW_ERROR);
             history = activeHistoryRepository.findByNodeIdAndStatus(request.getData().getNodeId(), 0);
+            if (history == null) {
+                history = new WorkflowActiveHistory();
+                history.setCreateBy(request.getUser().getId());
+                history.setStatus(1);
+                history.setNodeId(request.getData().getNodeId());
+                history.setCreateTime(LocalDateTime.now());
+            }
         }
         history.setOpinion(request.getData().getOpinion());
         history.setActiveStatus(request.getData().getActiveStatus());
@@ -218,19 +227,19 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
                 }
             }
         }
-        distributeRepository.deleteByWorkflowId(active.getWorkflowId());
-        Integer workflowId = active.getWorkflowId();
+        distributeRepository.deleteByWorkflowActiveId(active.getId());
+        Integer workflowActiveId = active.getId();
         //分发
         if (!CollectionUtils.isEmpty(sendUserIds)) {
-            distributeRepository.saveAll(sendUserIds.stream().map(i -> new WorkflowDistribute(workflowId, i)).toList());
+            distributeRepository.saveAll(sendUserIds.stream().map(i -> new WorkflowDistribute(workflowActiveId, i)).toList());
         } else {
             //不绑定默认流转到创建人
-            distributeRepository.save(new WorkflowDistribute(workflowId, active.getCreateBy()));
+            distributeRepository.save(new WorkflowDistribute(workflowActiveId, active.getCreateBy()));
         }
         Integer nodeHistoryId = history.getId();
         //抄送
         if (!CollectionUtils.isEmpty(sendCCUserIds)) {
-            distributeCCRepository.saveAll(sendCCUserIds.stream().map(i -> new WorkflowDistributeCC(workflowId, nodeHistoryId, i)).toList());
+            distributeCCRepository.saveAll(sendCCUserIds.stream().map(i -> new WorkflowDistributeCC(workflowActiveId, nodeHistoryId, i)).toList());
         }
         active.setNodeId(nextNode.getId());
         active.setUpdateBy(null);
@@ -331,8 +340,7 @@ public class WorkflowActiveService extends CURDService<WorkflowActive, WorkflowA
         edit.setHistory(activeHistoryRepository.findDtoByWorkflowId(request.getData().getWorkflowId()));
         edit.setActive(activeHistoryRepository.findActiveDtoByWorkflowId(request.getData().getWorkflowId()));
         edit.setNode(nodeRepository.findById(request.getData().getNodeId()).get());
+        edit.setInputs(nodeInputRepository.findByNodeIdAndDeleted(edit.getNode().getId(), 0));
         return edit;
-
-
     }
 }

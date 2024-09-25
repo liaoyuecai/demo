@@ -18,9 +18,9 @@ public interface WorkflowActiveRepository extends CustomerBaseRepository<Workflo
     @Modifying
     @Query("""
             update WorkflowActive wa set wa.updateBy = :userId 
-            where wa.workflowId = :workflowId and wa.updateBy is null
+            where wa.id = :id and wa.updateBy is null
             """)
-    int updateUpdateBy(Integer userId, Integer workflowId);
+    int updateUpdateBy(Integer userId, Integer id);
     @Query("""
             select new WorkflowActiveDto(wa.id,wa.workflowId,wa.nodeId,wa.workflowName,wn.nodeName,wa.createTime,wa.status) from WorkflowActive wa 
             Join WorkflowNode wn ON wa.nodeId = wn.id
@@ -30,7 +30,7 @@ public interface WorkflowActiveRepository extends CustomerBaseRepository<Workflo
 
     @Query("""
             select new WorkflowActiveDto(wa.id,wa.workflowId,wa.nodeId,wa.workflowName) from WorkflowActive wa 
-            Join WorkflowDistribute wd ON wa.workflowId = wd.workflowId
+            Join WorkflowDistribute wd ON wa.workflowActiveId = wd.id
             where wd.userId = :userId and wa.status = 1
             """)
     Page<WorkflowActiveDto> findWorkDtoPage(Integer userId, Pageable pageable);

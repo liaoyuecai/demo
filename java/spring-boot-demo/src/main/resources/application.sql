@@ -347,7 +347,7 @@ CREATE TABLE `workflow_active` (
 DROP TABLE IF EXISTS `workflow_distribute`;
 CREATE TABLE `workflow_distribute` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `workflow_id` int(11) NOT NULL COMMENT '流程id',
+  `workflow_active_id` int(11) NOT NULL COMMENT '流程id',
   `user_id` int(11) NOT NULL COMMENT '用户id',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='流程分发表';
@@ -355,7 +355,7 @@ CREATE TABLE `workflow_distribute` (
 DROP TABLE IF EXISTS `workflow_distribute_cc`;
 CREATE TABLE `workflow_distribute_cc` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `workflow_id` int(11) NOT NULL COMMENT '流程id',
+  `workflow_active_id` int(11) NOT NULL COMMENT '流程id',
     `node_history_id` int(11) NOT NULL COMMENT '节点id',
   `user_id` int(11) NOT NULL COMMENT '用户id',
   PRIMARY KEY (`id`)

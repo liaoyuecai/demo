@@ -1,7 +1,7 @@
 
 import { post } from '@/services/ant-design-pro/api';
 import { Button, Card, DatePicker, Form, Input, message, Modal, Radio, Row } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 export type WorkflowHistory = {
   activeFile?: string;
@@ -20,7 +20,8 @@ export type WorkflowInputAndData = {
     nodeName: string;
     isReturn?: number;
     workflowId: number;
-  }
+  },
+  inputs?: InputData[],
   history?: WorkflowHistory[];
   active?: WorkflowHistory;
 }
@@ -28,6 +29,7 @@ export type WorkflowInputAndData = {
 type WorkProps = {
   workflowName: string;
   workflowId: number;
+  onOK?: () => void;
   workflowInputAndData?: WorkflowInputAndData;
 }
 
@@ -37,8 +39,7 @@ type InputData = {
   inputType: number;
   inputValue?: string;
 }
-
-const Work: React.FC<WorkProps> = (prop: WorkProps) => {
+const Work = forwardRef((prop: WorkProps, ref) => {
 
   const [nodes, setNodes] = useState<any[]>();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -48,11 +49,15 @@ const Work: React.FC<WorkProps> = (prop: WorkProps) => {
       return ''
     // 将 ISO 字符串转换为 Date 对象  
     const date = new Date(isoString);
-
     const formattedDate = `${date.getUTCFullYear()}-${('0' + (date.getUTCMonth() + 1)).slice(-2)}-${('0' + date.getUTCDate()).slice(-2)} ${('0' + date.getUTCHours()).slice(-2)}:${('0' + date.getUTCMinutes()).slice(-2)}:${('0' + date.getUTCSeconds()).slice(-2)}`;
-    console.log(formattedDate)
     return formattedDate;
   }
+
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      form.submit();
+    },
+  }));
 
   useEffect(() => {
     const nodes: any[] = [];
@@ -121,49 +126,130 @@ const Work: React.FC<WorkProps> = (prop: WorkProps) => {
                 break;
             }
           })
-          if (prop.workflowInputAndData.node) {
-            if (prop.workflowInputAndData.node.nodeType === 5) {
-              formItems.push(<Form.Item
-                name={'activeStatus'}
-                key={'activeStatus'}
-                label={'审核结果'}
-                rules={[{ required: true }]}
-              >
-                <Radio.Group >
-                  <Radio value={3}>通过</Radio>
-                  <Radio value={4}>不通过</Radio>
-                </Radio.Group>
-              </Form.Item>);
-              formItems.push(<Form.Item
-                name={'opinion'}
-                label='审核意见'
-                rules={[{ required: true }]}
-              >
-                <Input.TextArea />
-              </Form.Item>);
-            }
+          if (prop.workflowInputAndData.node.nodeType === 5) {
+            formItems.push(<Form.Item
+              name={'activeStatus'}
+              key={'activeStatus'}
+              label={'审核结果'}
+              rules={[{ required: true }]}
+            >
+              <Radio.Group >
+                <Radio value={3}>通过</Radio>
+                <Radio value={4}>不通过</Radio>
+              </Radio.Group>
+            </Form.Item>);
+            formItems.push(<Form.Item
+              name={'opinion'}
+              label='审核意见'
+              rules={[{ required: true }]}
+            >
+              <Input.TextArea />
+            </Form.Item>);
           }
           nodes.push(<Row key={item.id}><Card style={{ width: '800px' }} title={item.nodeName} extra={<>{prop.workflowInputAndData.node
             && prop.workflowInputAndData.node.isReturn === 1 &&
             <Button onClick={() => {
               setModalOpen(true)
               returnForm.setFieldsValue({ workflowName: prop.workflowName, workflowId: prop.workflowId, nodeId: item.nodeId, inputs: [], activeStatus: 2 });
-            }}>回退</Button>}</>}><Form onFinish={(val) => {
-              const { workflowId, workflowName, nodeId, ...inputs } = val
-              const inputValues: any[] = []
-              historyInputs.forEach(input=>{
+            }}>回退</Button>}</>}><Form form={form} onFinish={(val) => {
+              const {  opinion, activeStatus } = val
+              historyInputs.forEach(input => {
                 input.inputValue = val[input.inputTitle]
               })
-              post('/workflow/active/submit', { data: { workflowId: workflowId, workflowName: workflowName, nodeId: nodeId, inputs: historyInputs,  } }).then(res => {
+              post('/workflow/active/submit', { data: { workflowId:prop.workflowId, workflowName:prop.workflowName, nodeId:prop.workflowInputAndData?.node.id, inputs: historyInputs, activeStatus, opinion } }).then(res => {
                 if (res.code === 0) {
                   message.success('提交成功')
-                  
+                  if (prop.onOK) {
+                    prop.onOK();
+                  }
                 }
               })
             }}>{formItems}</Form></Card></Row>)
         }
-      }else{
-        //todo 根据节点生成
+      } else {
+        const node = prop.workflowInputAndData.node;
+        const formItems: any[] = [];
+        if (prop.workflowInputAndData.inputs && prop.workflowInputAndData.inputs.length > 0) {
+          prop.workflowInputAndData.inputs.forEach(input => {
+            switch (input.inputType) {
+              case 1:
+                formItems.push(<Form.Item
+                  name={input.inputTitle}
+                  key={input.inputTitle}
+                  label={input.inputTitle}
+                  rules={[{ required: input.inputNecessary === 1 }]}
+                >
+                  <DatePicker showTime needConfirm={false} />
+                </Form.Item>);
+                break;
+              case 2:
+                formItems.push(<Form.Item
+                  name={input.inputTitle}
+                  key={input.inputTitle}
+                  label={input.inputTitle}
+                  rules={[{ required: input.inputNecessary === 1 }]}
+                >
+                  <Input />
+                </Form.Item>);
+                break;
+              case 3:
+                formItems.push(<Form.Item
+                  name={input.inputTitle}
+                  key={input.inputTitle}
+                  label={input.inputTitle}
+                  rules={[{ required: input.inputNecessary === 1 }]}
+                >
+                  <Input.TextArea />
+                </Form.Item>);
+                break;
+            }
+          })
+
+        }
+        if (prop.workflowInputAndData.node.nodeType === 5) {
+          formItems.push(<Form.Item
+            name={'activeStatus'}
+            key={'activeStatus'}
+            label={'审核结果'}
+            rules={[{ required: true }]}
+          >
+            <Radio.Group >
+              <Radio value={3}>通过</Radio>
+              <Radio value={4}>不通过</Radio>
+            </Radio.Group>
+          </Form.Item>);
+          formItems.push(<Form.Item
+            name={'opinion'}
+            label='审核意见'
+            rules={[{ required: true }]}
+          >
+            <Input.TextArea />
+          </Form.Item>);
+          nodes.push(<Row key={node.id}><Card style={{ width: '800px' }} title={node.nodeName} extra={<>{prop.workflowInputAndData.node
+            && prop.workflowInputAndData.node.isReturn === 1 &&
+            <Button onClick={() => {
+              setModalOpen(true)
+              returnForm.setFieldsValue({ workflowName: prop.workflowName, workflowId: prop.workflowId, nodeId: node.id, inputs: [], activeStatus: 2 });
+            }}>回退</Button>}</>}><Form form={form} onFinish={(val) => {
+              const { opinion, activeStatus } = val
+              const inputs: any[] = [];
+              if (prop.workflowInputAndData && prop.workflowInputAndData.inputs) {
+                prop.workflowInputAndData.inputs.forEach((input, index) => {
+                  inputs[index] = input;
+                  inputs[index].inputValue = val[input.inputTitle]
+                })
+              }
+              post('/workflow/active/submit', { data: { workflowId:prop.workflowId, workflowName:prop.workflowName, nodeId:prop.workflowInputAndData?.node.id, inputs, activeStatus, opinion } }).then(res => {
+                if (res.code === 0) {
+                  message.success('提交成功')
+                  if (prop.onOK) {
+                    prop.onOK();
+                  }
+                }
+              })
+            }}>{formItems}</Form></Card></Row>)
+        }
+
       }
       setNodes(nodes);
     }
@@ -171,15 +257,15 @@ const Work: React.FC<WorkProps> = (prop: WorkProps) => {
 
   const [returnForm] = Form.useForm();
 
-
+  const [form] = Form.useForm();
   return (
     <>
       <Modal title='填写回退理由' open={modalOpen} onCancel={() => { setModalOpen(false) }} onOk={() => { returnForm.submit() }}>
         <Form form={returnForm} onFinish={(val) => {
-          post('/workflow/active/submit').then(res => {
+          post('/workflow/active/submit', val).then(res => {
             if (res.code === 0) {
               message.success('操作成功');
-              setModalOpen(false)
+              setModalOpen(false);
             }
           })
         }}>
@@ -223,6 +309,8 @@ const Work: React.FC<WorkProps> = (prop: WorkProps) => {
       {nodes}
     </>
   );
-};
+})
+
+
 
 export default Work;

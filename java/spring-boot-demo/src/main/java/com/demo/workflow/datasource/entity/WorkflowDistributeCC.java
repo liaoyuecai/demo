@@ -13,15 +13,15 @@ public class WorkflowDistributeCC {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Integer id;
-    private Integer workflowId;
+    private Integer workflowActiveId;
     private Integer nodeHistoryId;
     private Integer userId;
 
     public WorkflowDistributeCC() {
     }
 
-    public WorkflowDistributeCC(Integer workflowId, Integer nodeHistoryId, Integer userId) {
-        this.workflowId = workflowId;
+    public WorkflowDistributeCC(Integer workflowActiveId, Integer nodeHistoryId, Integer userId) {
+        this.workflowActiveId = workflowActiveId;
         this.nodeHistoryId = nodeHistoryId;
         this.userId = userId;
     }
